@@ -72,7 +72,28 @@ The process of processing a 2D object and computing its spatial properties in 3D
 Our project aims to create a system which will use pose estimation to render a 3D object onto a flat surface in a 2D image such that it appears to exist in physical space.
 
 <hr>
-<h2> Method and Implementation </h2>
+<h2> Methodology and Background Research </h2>
+
+<p>
+We plan to implement this system using Javascript, since this will allow us to run the solution in any modern web browser with no need to compile or install additional software or libraries.<br><br>
+
+To do this, we will use the following tools:<br></p>
+
+<ul>
+<li><a href="http://inspirit.github.io/jsfeat/">jsfeat:</a> Javascript computer vision library that provides data structures for matrices, as well as functions for object detection and tracking.</li>
+<li><a href="https://github.com/jcmellado/js-aruco">js-aruco:</a> Javascript augmented reality library, which provides support for detecting and processing standardized AR markers.</li>
+<li><a href="http://threejs.org/">three.js:</a> Javascript WebGL 3D rendering library, which will allow us to render 3D objects directly onto images in the browser
+<li><a href="http://www.html5rocks.com/en/tutorials/getusermedia/intro/">HTML5:</a> Modern browser functionality will allow us to access media to run our algorithms on -- embedded video, user-uploaded images, webcam capture, etc.</li>
+</ul>
+
+<p> 
+Other people have definitely set out to solve this problem before, but weren't able to find a satisfying, functional example of Javascript-based pose estimation and 3D rendering that correctly positions, orients, and scales the virtual object. The goal is something that looks like a "hologram", floating above the surface of the 2D marker.<br><br>
+
+Furthermore, while this process is often performed on image sequences, other implementations frequently exhibit "stuttering" behavior, where more than one pose is possible for a given marker, and the program must choose which one to render. They also tend to jitter slightly when standing still due to small differences from one frame to the next. We can fix these problems by employing tracking and filtering techniques we learned from previous homework assignments.<br><br>
+
+If successful, this project could be extended specifically for use with visualizing objects in preparation for 3D printing. By outfitting an <a href="https://en.wikipedia.org/wiki/Fused_deposition_modeling"> FDM 3D Printer</a> with one or more webcams and a set of AR markers, one could theoretically preview the positioning and size of objects from the 3D models used to print them. More ambitiously, one could use the 2D projection of the 3D model to detect printing errors by comparing it against the shape of the object during printing, which could be obtained through segmentation using brightly-colored plastic filament.<br><br>
+
+We've already got live 3D rendering working, and we have <a href="https://www.youtube.com/watch?v=_wzPupbww4I">partially functional examples</a>a and <a href="https://en.wikipedia.org/wiki/3D_pose_estimation">pseudocode</a> of pose estimation and general image processing to work from. The next step is to combine them!<br><br>
 
 <hr>
 <h2> Input Images and Expected Results</h2>
@@ -81,7 +102,7 @@ Below are some sample images which show a cell phone rendering a standardized au
 
 The composite images were created by taking a 3D model of <a href="http://www.thingiverse.com/thing:613160/#files">a virtual object</a>, rendering it in <a href="http://www.tinkercad.com">Tinkercad</a>, and aligning it with a 3D model of the 2D marker.<br><br>
 
-The orientation and position of the camera was then adjusted until the marker appeared as it does in each input image, and a screenshot of the rendered 3D object was saved. These 2D renderings were then manually composited with the input images so as to make it look like the virtual object is "standing" on the surface of the cell phone.
+The orientation and position of the virtual camera was then adjusted until the marker appeared as it does in each input image, and a screenshot of the rendered 3D object was saved. These 2D renderings were then manually composited with the input images so as to make it look like the virtual object is "standing" on the surface of the cell phone.
 
 Our final implementation should be fast enough to perform this function in real time on image sequences, such as videos or a webcam feed.
 </p>
@@ -117,44 +138,13 @@ Our final implementation should be fast enough to perform this function in real 
 <hr>
 <h2> Discussion </h2>
 
-<p> 
-Discuss your method and results:
-<ul>
-<li>What are the strengths and weaknesses of your method? </li>
-<li>Do your results show that your method is generally successful or
-     are there limitations? Describe what you expected to find in your
-     experiments, and how that differed or was confirmed by your
-     results. </li>
-<li>Potential future work. How could your method be improved?   What
-would you try (if you had more time) to overcome the
-failures/limitations of your work?</li> 
-</ul>
-</p>
-
-<hr>
-<h2> Conclusions </h2>
-
-<p>
-Based on your discussion, what are your conclusions?  What is your
-main message?
-</p>
-
-
 <hr>
 <h2> Credits and Bibliography </h2>
 <p>
-
-Cite any papers or other references you consulted while developing
-your solution.  Citations to papers should include the authors, the
-year of publication, the title of the work, and the publication
-information (e.g., book name and publisher; conference proceedings and
-location; journal name, volume and pages; technical report and
-institution).  Material on the web should include the url and date of
-access.
 </p>
 
 <p>
-Credit any joint work or discussions with your classmates. 
+Collaboration between Aaron Heuckroth and Elena Quijano.
 </p>
 <hr>
 </div>
