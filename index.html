@@ -91,9 +91,13 @@ Other people have definitely set out to solve this problem before, but weren't a
 
 Furthermore, while this process is often performed on image sequences, other implementations frequently exhibit "stuttering" behavior, where more than one pose is possible for a given marker, and the program must choose which one to render. They also tend to jitter slightly when standing still due to small differences from one frame to the next. We can fix these problems by employing tracking and filtering techniques we learned from previous homework assignments.<br><br>
 
+<a href="http://mesh.brown.edu/3DP-2012/pdfs/Grembowietz-2004-3dPoseEstimation.pdf">This slide deck</a> references many papers on pose estimation, and gives an overview of different approaches and techniques.</a>
+
 If successful, this project could be extended specifically for use with visualizing objects in preparation for 3D printing. By outfitting an <a href="https://en.wikipedia.org/wiki/Fused_deposition_modeling"> FDM 3D Printer</a> with one or more webcams and a set of AR markers, one could theoretically preview the positioning and size of objects from the 3D models used to print them. More ambitiously, one could use the 2D projection of the 3D model to detect printing errors by comparing it against the shape of the object during printing, which could be obtained through segmentation using brightly-colored plastic filament.<br><br>
 
 We've already got live 3D rendering working, and we have <a href="https://www.youtube.com/watch?v=_wzPupbww4I">partially functional examples</a> and <a href="https://en.wikipedia.org/wiki/3D_pose_estimation">pseudocode</a> of pose estimation and general image processing to work from. The next step is to combine them!<br><br>
+
+Our recent course lectures on rotation in 2D and 3D, and quaternions will be especially helpful. Our previous discussions of segmentation and filtering may also be valuable in detecting the AR marker in a video sequence and ensuring that tracking is smooth.<br><br>
 
 <hr>
 <h2> Input Images and Expected Results</h2>
