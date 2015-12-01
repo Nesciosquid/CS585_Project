@@ -1,0 +1,23 @@
+{
+  "name": "cs585-project",
+  "version": "1.0.0",
+  "description": "Aaron Heuckroth and Elena Quijano's CS585 project at BU F2015",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nesciosquid/CS585_Project.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Nesciosquid/CS585_Project/issues"
+  },
+  "homepage": "https://github.com/Nesciosquid/CS585_Project#readme",
+  "devDependencies": {
+    "express": "^4.13.3",
+    "socket.io": "^1.3.7"
+  }
+}
