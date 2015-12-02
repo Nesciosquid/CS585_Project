@@ -3,22 +3,34 @@
 <head>
   <title>Augmented Reality</title>
 
-  <script type="text/javascript" src="libs/Three.js"></script> 
-  <script src="STLLoader.js"></script>
-  <script type="text/javascript" src="svd.js"></script> 
-  <script type="text/javascript" src="posit1.js"></script> 
-  <script type="text/javascript" src="cv.js"></script> 
-  <script type="text/javascript" src="aruco.js"></script> 
-  <script type="text/javascript" src="FilmShader.js"></script>
+  <script type="text/javascript" src="./libs/Three.js"></script> 
+  <script type="text/javascript" src="./libs/STLLoader.js"></script>
+  <script type="text/javascript" src="./libs/svd.js"></script> 
+  <script type="text/javascript" src="./libs/posit2.js"></script> 
+  <script type="text/javascript" src="./libs/cv.js"></script> 
+  <script type="text/javascript" src="./libs/aruco.js"></script> 
+  <script type="text/javascript" src="./libs/FilmShader.js"></script>
+  <script type="text/javascript" src="./libs/EffectComposer.js"></script>
+  <script type="text/javascript" src="./libs/CopyShader.js"></script>
+  <script type="text/javascript" src="./libs/ShaderPass.js"></script>
+  <script type="text/javascript" src="./libs/RenderPass.js"></script>
+  <script type="text/javascript" src="./libs/RGBShiftShader.js"></script>
+  <script type="text/javascript" src="./libs/DotScreenShader.js"></script>
+  <script type="text/javascript" src="./libs/MaskPass.js"></script>
+  <script type="text/javascript" src="./libs/FXAAShader.js"></script>
+  <script type="text/javascript" src="./libs/VerticalBlurShader.js"></script>
+  <script type="text/javascript" src="./libs/HorizontalBlurShader.js"></script>
 
   <script>
     var video, canvas, context, imageData, detector, posit;
-    var renderer1, renderer2, renderer3;
-    var scene1, scene2, scene3, scene4;
-    var camera1, camera2, camera3, camera4;
-    var plane1, plane2, model, texture;
+    var renderer3;
+    var scene3, scene4, scene5;
+    var camera3, camera4;
+    var renderingContext;
+    var bgComposer, modelComposer, maskComposer;
+    var model, texture, modelTwo;
     var step = 0.0;
-    var targetModel = "./millenium_falcon.stl";
+    var targetModel = "./models/millenium_falcon.stl";
 
     var modelSize = 50.0; //millimeters
 
@@ -26,6 +38,7 @@
       video = document.getElementById("video");
       canvas = document.getElementById("canvas");
       context = canvas.getContext("2d");
+      renderingContext = canvas.getContext("webgl", {stencil:true});
     
       canvas.width = parseInt(canvas.style.width);
       canvas.height = parseInt(canvas.style.height);
@@ -67,7 +80,6 @@
         snapshot();
 
         var markers = detector.detect(imageData);
-        drawCorners(markers);
         updateScenes(markers);
         
         render();
@@ -78,53 +90,15 @@
       context.drawImage(video, 0, 0, canvas.width, canvas.height);
       imageData = context.getImageData(0, 0, canvas.width, canvas.height);
     };
-    
-    function drawCorners(markers){
-      var corners, corner, i, j;
-    
-      context.lineWidth = 3;
-
-      for (i = 0; i < markers.length; ++ i){
-        corners = markers[i].corners;
-        
-        context.strokeStyle = "red";
-        context.beginPath();
-        
-        for (j = 0; j < corners.length; ++ j){
-          corner = corners[j];
-          context.moveTo(corner.x, corner.y);
-          corner = corners[(j + 1) % corners.length];
-          context.lineTo(corner.x, corner.y);
-        }
-
-        context.stroke();
-        context.closePath();
-        
-        context.strokeStyle = "green";
-        context.strokeRect(corners[0].x - 2, corners[0].y - 2, 4, 4);
-      }
-    };
 
     function createRenderers(){
-      renderer1 = new THREE.WebGLRenderer({antialiasing: true});
-      renderer1.setClearColor(0xffff00, 1);
-      renderer1.setSize(canvas.width, canvas.height);
-      document.getElementById("container1").appendChild(renderer1.domElement);
-      scene1 = new THREE.Scene();
-      camera1 = new THREE.PerspectiveCamera(40, canvas.width / canvas.height, 1, 1000);
-      scene1.add(camera1);
 
-      renderer2 = new THREE.WebGLRenderer({antialiasing: true});
-      renderer2.setClearColor(0xffff00, 1);
-      renderer2.setSize(canvas.width, canvas.height);
-      document.getElementById("container2").appendChild(renderer2.domElement);
-      scene2 = new THREE.Scene();
-      camera2 = new THREE.PerspectiveCamera(40, canvas.width / canvas.height, 1, 1000);
-      scene2.add(camera2);
-
-      renderer3 = new THREE.WebGLRenderer({antialiasing: true});
+      renderer3 = new THREE.WebGLRenderer({antialiasing: true, stencil: true});
+      console.log("does GL have stencil buffer?");
+      console.log(renderer3.context.getContextAttributes());
       renderer3.setClearColor(0xffffff, 1);
       renderer3.setSize(canvas.width, canvas.height);
+
       document.getElementById("container").appendChild(renderer3.domElement);
       
       scene3 = new THREE.Scene();
@@ -147,49 +121,69 @@
       scene4.add( lights[1] );
       scene4.add( lights[2] );
 
+      scene5 = new THREE.Scene();
+
+      // From: http://www.airtightinteractive.com/2013/02/intro-to-pixel-shaders-in-three-js/
+      // postprocessing
+
+
+      bgComposer = new THREE.EffectComposer( renderer3 );
+      modelComposer = new THREE.EffectComposer( renderer3 );
+      maskComposer = new THREE.EffectComposer(renderer3);
+
+      var renderVideoPass = new THREE.RenderPass(scene3, camera3);
+      renderVideoPass.clear = true;
+
+      var renderModelPass = new THREE.RenderPass(scene4, camera4);
+      renderModelPass.clear = false;
+
+      var renderMaskPass = new THREE.RenderPass(scene5, camera4);
+      renderMaskPass.clear = false;
+
+      var copyPass = new THREE.ShaderPass(THREE.CopyShader);
+      copyPass.renderToScreen = true;
+
+      var maskPass = new THREE.MaskPass(scene5, camera4);
+
+      var clearMaskPass = new THREE.ClearMaskPass();
+
+      var filmPass = new THREE.ShaderPass( THREE.FilmShader );
+      filmPass.uniforms[ "sCount" ].value = 400;
+      filmPass.uniforms[ "sIntensity" ].value = 1;
+      filmPass.uniforms[ "nIntensity" ].value = .5;
+      filmPass.uniforms[ "grayscale" ].value = 0;
+
+      var horizontalBlurPass = new THREE.ShaderPass(THREE.HorizontalBlurShader);
+      var verticalBlurPass = new THREE.ShaderPass(THREE.VerticalBlurShader);
+
+      bgComposer.addPass(renderVideoPass);
+      bgComposer.addPass(renderModelPass);
+      //bgComposer.addPass(filmPass);
+      bgComposer.addPass(clearMaskPass);
+      //bgComposer.addPass(horizontalBlurPass);
+      //bgComposer.addPass(verticalBlurPass);
+      bgComposer.addPass(copyPass);
+
     };
 
     function render(){
-      renderer1.clear();
-      renderer1.render(scene1, camera1);
-      
-      renderer2.clear();
-      renderer2.render(scene2, camera2);
-
       renderer3.autoClear = false;
-      renderer3.clear();
-      renderer3.render(scene3, camera3);
-      renderer3.render(scene4, camera4);
+      //renderer3.render(scene3, camera3);
+      bgComposer.render();
+      //renderer3.render(scene4, camera4);
     };
 
     function createScenes(){
-      plane1 = createPlane();
-      plane1.scale.x = modelSize;
-      plane1.scale.y = modelSize;
-      plane1.scale.z = modelSize;
-      scene1.add(plane1);
-
-      plane2 = createPlane();
-      plane2.scale.x = modelSize;
-      plane2.scale.y = modelSize;
-      plane2.scale.z = modelSize;
-      scene2.add(plane2);
       
       texture = createTexture();
       scene3.add(texture);
     
       model = createModel();
+      mask = createMask();
+
       scene4.add(model);
-    };
-    
-    function createPlane(){
-      var object = new THREE.Object3D(),
-          geometry = new THREE.PlaneGeometry(1.0, 1.0, 0.0),
-          material = new THREE.MeshNormalMaterial(),
-          mesh = new THREE.Mesh(geometry, material);
-      object.add(mesh);
-      
-      return object;
+
+      scene5.add(mask);
     };
     
     function createTexture(){
@@ -206,36 +200,18 @@
       
       return object;
     };
-    
-    function createModel(){
-      var object = new THREE.Object3D();
+
+    function createMask(){
       var loader = new THREE.STLLoader();
+      var object = new THREE.Object3D();
       loader.load(targetModel, function (geometry){
-        var img = new Image();
-        img.src="scan-line.png";
-        var tex = new THREE.Texture(img);
-        tex.minFilter = THREE.LinearFilter;
-        img.tex = tex;
+        var material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF, transparent: false, opacity: .85, depthTest: true, depthWrite: true, emissive: 0xFFFFFF} );
 
-        img.onload = function() {
-          this.tex.needsUpdate = true;
-        }
-
-        var projectionTexture = THREE.ImageUtils.loadTexture('./light-cone.png');
-        projectionTexture.repeat.x = 1;
-        projectionTexture.repeat.y = .75;
-        projectionTexture.wrapS = THREE.RepeatWrapping;
-        projectionTexture.wrapT = THREE.RepeatWrapping;
-        projectionTexture.offset.set(0,0);
-
-        var material = new THREE.MeshLambertMaterial( { color: 0x73DCFF, transparent: true, opacity: .85, depthTest: true, depthWrite: true, emissive: 0x111111} );
         var mesh = new THREE.Mesh(geometry, material);
 
-        mesh.scale.x = .5;
-        mesh.scale.y = .5;
-        mesh.scale.z = .5;
-
-        mesh.rotation.set(0, 0,0);
+        mesh.scale.x = 1;
+        mesh.scale.y = 1;
+        mesh.scale.z = 1;
 
         var box = new THREE.Box3().setFromObject(mesh);
         //From: http://stackoverflow.com/questions/28848863/threejs-how-to-rotate-around-objects-own-center-instend-of-world-center
@@ -245,23 +221,35 @@
         mesh.scale.set(mesh.scale.x/modelSize, mesh.scale.y/modelSize, mesh.scale.z/modelSize);
         mesh.position.set(-1/7,0,.5);
 
-        var holoMaterial = new THREE.MeshLambertMaterial( { map: projectionTexture, transparent: true, opacity: 1, depthTest: false, depthWrite: false, emissive: 0x000000} );
-
-        var objMesh = new THREE.Mesh(mesh.geometry, holoMaterial);
-        var holoGeom = new THREE.BoxGeometry(1, 1, box.size().z/modelSize+.5);
-        var holoMesh = new THREE.Mesh(holoGeom, holoMaterial);
-
-        var flatGeom = new THREE.BoxGeometry(1.1,1.1, .02);
-        var flatMaterial = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
-        var flatMesh = new THREE.Mesh(flatGeom, flatMaterial);
-        holoMesh.position.set(0,0,(box.size().z/modelSize+.5)/2);
-        //object.add(flatMesh);
-        //object.add(holoMesh);
         object.add(mesh);
-      });
+        });
+        return object;
+    }
 
-      return object;
-    };
+    function createModel(){
+      var loader = new THREE.STLLoader();
+      var object = new THREE.Object3D();
+      loader.load(targetModel, function (geometry){
+        var material = new THREE.MeshLambertMaterial( { color: 0x73DCFF, transparent: true, opacity: .8, depthTest: true, depthWrite: true, emissive: 0x111111} );
+
+        var mesh = new THREE.Mesh(geometry, material);
+
+        mesh.scale.x = .5;
+        mesh.scale.y = .5;
+        mesh.scale.z = .5;
+
+        var box = new THREE.Box3().setFromObject(mesh);
+        //From: http://stackoverflow.com/questions/28848863/threejs-how-to-rotate-around-objects-own-center-instend-of-world-center
+
+        mesh.position.multiplyScalar(-1);
+
+        mesh.scale.set(mesh.scale.x/modelSize, mesh.scale.y/modelSize, mesh.scale.z/modelSize);
+        mesh.position.set(-1/7,0,.5);
+
+        object.add(mesh);
+        });
+        return object;
+    }
 
     function updateScenes(markers){
       var corners, corner, pose, i;
@@ -278,9 +266,9 @@
         
         pose = posit.pose(corners);
         
-        updateObject(plane1, pose.bestRotation, pose.bestTranslation);
-        updateObject(plane2, pose.alternativeRotation, pose.alternativeTranslation);
         updateObject(model, pose.bestRotation, pose.bestTranslation);
+        updateObject(mask, pose.bestRotation, pose.bestTranslation);
+
 
         updatePose("pose1", pose.bestError, pose.bestRotation, pose.bestTranslation);
         updatePose("pose2", pose.alternativeError, pose.alternativeRotation, pose.alternativeTranslation);
@@ -294,23 +282,6 @@
     };
     
     function updateObject(object, rotation, translation){
-      
-      /*
-      object.scale.x = modelSize;
-      object.scale.y = modelSize;
-      object.scale.z = modelSize;
-      
-
-      object.rotation.x = -Math.asin(-rotation[1][2]);
-      object.rotation.y = -Math.atan2(rotation[0][2], rotation[2][2]);
-      object.rotation.z = Math.atan2(rotation[1][0], rotation[1][1]);
-
-      object.position.x = translation[0];
-      object.position.y = translation[1];
-      object.position.z = -translation[2];
-      */
-
-
       object.scale.x = (modelSize + object.scale.x)/2;
       object.scale.y = (modelSize + object.scale.y)/2;
       object.scale.z = (modelSize + object.scale.z)/2;
@@ -378,12 +349,10 @@
       <div id="container" style="width: 640px; height: 480px; float: left; border: solid 1px black; background: green;"></div>
       <div style="clear: both;"></div>
       <div style="float: left; border: solid 1px black;">
-        <div id="container1" style="width: 640px; height: 480px; background: red;  display: none;"></div>
-        <div id="pose1" style="display:none;"></div>
+        <div id="pose1" style="display:show;"></div>
       </div>
       <div style="float: left; border: solid 1px black;">
-        <div id="container2" style="width: 640px; height: 480px; background: blue;  display: none;"></div>
-        <div id="pose2" style="display:none;"></div>
+        <div id="pose2" style="display:show;"></div>
       </div>
     </div>
   </div>
