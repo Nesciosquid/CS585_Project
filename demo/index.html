@@ -9,6 +9,7 @@
   <script type="text/javascript" src="posit1.js"></script> 
   <script type="text/javascript" src="cv.js"></script> 
   <script type="text/javascript" src="aruco.js"></script> 
+  <script type="text/javascript" src="FilmShader.js"></script>
 
   <script>
     var video, canvas, context, imageData, detector, posit;
@@ -17,7 +18,7 @@
     var camera1, camera2, camera3, camera4;
     var plane1, plane2, model, texture;
     var step = 0.0;
-    var targetModel = "./owl_35mm.stl";
+    var targetModel = "./millenium_falcon.stl";
 
     var modelSize = 50.0; //millimeters
 
@@ -105,7 +106,7 @@
     };
 
     function createRenderers(){
-      renderer1 = new THREE.WebGLRenderer();
+      renderer1 = new THREE.WebGLRenderer({antialiasing: true});
       renderer1.setClearColor(0xffff00, 1);
       renderer1.setSize(canvas.width, canvas.height);
       document.getElementById("container1").appendChild(renderer1.domElement);
@@ -113,7 +114,7 @@
       camera1 = new THREE.PerspectiveCamera(40, canvas.width / canvas.height, 1, 1000);
       scene1.add(camera1);
 
-      renderer2 = new THREE.WebGLRenderer();
+      renderer2 = new THREE.WebGLRenderer({antialiasing: true});
       renderer2.setClearColor(0xffff00, 1);
       renderer2.setSize(canvas.width, canvas.height);
       document.getElementById("container2").appendChild(renderer2.domElement);
@@ -121,7 +122,7 @@
       camera2 = new THREE.PerspectiveCamera(40, canvas.width / canvas.height, 1, 1000);
       scene2.add(camera2);
 
-      renderer3 = new THREE.WebGLRenderer();
+      renderer3 = new THREE.WebGLRenderer({antialiasing: true});
       renderer3.setClearColor(0xffffff, 1);
       renderer3.setSize(canvas.width, canvas.height);
       document.getElementById("container").appendChild(renderer3.domElement);
@@ -210,21 +211,43 @@
       var object = new THREE.Object3D();
       var loader = new THREE.STLLoader();
       loader.load(targetModel, function (geometry){
-        var material = new THREE.MeshLambertMaterial( { color: 0x7FC3DA, transparent: true, opacity: .85, depthTest: true, depthWrite: true, emissive: 0x222222} );
+        var img = new Image();
+        img.src="scan-line.png";
+        var tex = new THREE.Texture(img);
+        tex.minFilter = THREE.LinearFilter;
+        img.tex = tex;
 
+        img.onload = function() {
+          this.tex.needsUpdate = true;
+        }
+
+        var projectionTexture = THREE.ImageUtils.loadTexture('./light-cone.png');
+        projectionTexture.repeat.x = 1;
+        projectionTexture.repeat.y = .75;
+        projectionTexture.wrapS = THREE.RepeatWrapping;
+        projectionTexture.wrapT = THREE.RepeatWrapping;
+        projectionTexture.offset.set(0,0);
+
+        var material = new THREE.MeshLambertMaterial( { color: 0x73DCFF, transparent: true, opacity: .85, depthTest: true, depthWrite: true, emissive: 0x111111} );
         var mesh = new THREE.Mesh(geometry, material);
+
+        mesh.scale.x = .5;
+        mesh.scale.y = .5;
+        mesh.scale.z = .5;
+
+        mesh.rotation.set(0, 0,0);
+
         var box = new THREE.Box3().setFromObject(mesh);
-        // http://stackoverflow.com/questions/28848863/threejs-how-to-rotate-around-objects-own-center-instend-of-world-center
-        console.log(box);
-        box.center(mesh.position);
-        console.log(box);
+        //From: http://stackoverflow.com/questions/28848863/threejs-how-to-rotate-around-objects-own-center-instend-of-world-center
 
         mesh.position.multiplyScalar(-1);
-        mesh.scale.set(1/modelSize, 1/modelSize, 1/modelSize);
+
+        mesh.scale.set(mesh.scale.x/modelSize, mesh.scale.y/modelSize, mesh.scale.z/modelSize);
         mesh.position.set(-1/7,0,.5);
 
-        var holoMaterial = new THREE.MeshLambertMaterial( { color: 0x7FC3DA, transparent: true, opacity: .3, depthTest: false, depthWrite: false, emissive: 0x222222} );
+        var holoMaterial = new THREE.MeshLambertMaterial( { map: projectionTexture, transparent: true, opacity: 1, depthTest: false, depthWrite: false, emissive: 0x000000} );
 
+        var objMesh = new THREE.Mesh(mesh.geometry, holoMaterial);
         var holoGeom = new THREE.BoxGeometry(1, 1, box.size().z/modelSize+.5);
         var holoMesh = new THREE.Mesh(holoGeom, holoMaterial);
 
@@ -232,11 +255,8 @@
         var flatMaterial = new THREE.MeshBasicMaterial({color: 0xFFFFFF});
         var flatMesh = new THREE.Mesh(flatGeom, flatMaterial);
         holoMesh.position.set(0,0,(box.size().z/modelSize+.5)/2);
-        //mesh.scale.set(.5,.5,.5);
-        //mesh.scale.set(1,1,1);
-        //mesh.position.set(.1,.15,0);
-        object.add(flatMesh);
-        object.add(holoMesh);
+        //object.add(flatMesh);
+        //object.add(holoMesh);
         object.add(mesh);
       });
 
@@ -349,20 +369,20 @@
 
 <body style="text-align: center; font-family: monospace;">
 
-  <video id="video" width= height=240 autoplay="true" style="display:none;"></video>
+  <video id="video" autoplay="true" style="display:none;"></video>
   
   <div style="margin: 10px;"><strong>-= Augmented Reality =-</strong></div>
   <div style="width: 100%;">
     <div style="width: 650px; margin-left:auto; margin-right:auto;">
-      <canvas id="canvas" style="width: 320px; height: 240px; float: left; border: solid 1px black; display: none;"></canvas>
-      <div id="container" style="width: 320px; height: 240px; float: left; border: solid 1px black; background: green;"></div>
+      <canvas id="canvas" style="width: 640px; height: 480px; float: left; border: solid 1px black; display: none;"></canvas>
+      <div id="container" style="width: 640px; height: 480px; float: left; border: solid 1px black; background: green;"></div>
       <div style="clear: both;"></div>
       <div style="float: left; border: solid 1px black;">
-        <div id="container1" style="width: 320px; height: 240px; background: red;  display: none;"></div>
+        <div id="container1" style="width: 640px; height: 480px; background: red;  display: none;"></div>
         <div id="pose1" style="display:none;"></div>
       </div>
       <div style="float: left; border: solid 1px black;">
-        <div id="container2" style="width: 320px; height: 240px; background: blue;  display: none;"></div>
+        <div id="container2" style="width: 640px; height: 480px; background: blue;  display: none;"></div>
         <div id="pose2" style="display:none;"></div>
       </div>
     </div>
