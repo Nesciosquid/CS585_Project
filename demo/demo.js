@@ -13,8 +13,8 @@ var currentOpacity = .85;
 var currentHeight = 30;
 var currentRotation = [0,0,0];
 
-var currentColor = 0x73DCFF;
-var missingColor = 0xEF5350;
+var currentColor = 0x81D4FA;
+var missingColor = 0xB39DDB;
 
 var currentFlip = false;
 var rotationTime = 30; // seconds
@@ -29,7 +29,7 @@ var oscillateOpacity = true;
 
 var estimationCertainty = 1;
 
-var rotationalVariance = degToRad(.5); // radians
+var rotationalVariance = degToRad(1); // radians
 var translationalVariance = 2; // pixels
 
 var systemRotationalVariance = 0; // radians
