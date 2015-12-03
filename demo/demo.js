@@ -490,11 +490,24 @@ function updateScenes(markers) {
     var rotYVel;
     var rotZVel;
 
+    if (pose.bestError < 3 && pose.alternativeError < 3 && lastPose != null){
+      var altRotParams = getRotationParams(pose.alternativeRotation);
+      var lastRotParams = getRotationParams(lastPose.bestRotation);
+      var diffParams = Math.pow((rotParams[0] - lastRotParams[0]),2) + Math.pow((rotParams[1] - lastRotParams[1]),2) + Math.pow((rotParams[2] - lastRotParams[2]),2);
+      var diffAltParams = Math.pow((altRotParams[0] - altRotParams[0]),2) + Math.pow((altRotParams[1] - altRotParams[1]),2) + Math.pow((altRotParams[2] - altRotParams[2]),2);
+
+      if (diffParams > diffAltParams){
+        rotParams = altRotParams;
+        pose.bestRotation = pose.alternativeRotation;
+      }
+    }
+
     if (lastPose == null){
       rotXVel = 0;
       rotYVel = 0;
       rotZVel = 0;
     } else {
+
       var lastRotParams = getRotationParams(lastPose.bestRotation);
       var rotXVel = rotParams[0] - lastRotParams[0];
       var rotYVel = rotParams[0] - lastRotParams[0];
