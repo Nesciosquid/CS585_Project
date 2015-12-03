@@ -10,7 +10,7 @@ var loadedGeometry;
 
 var currentScale = 1.0;
 var currentOpacity = .85;
-var currentHeight = 30;
+var currentHeight = 0;
 var currentRotation = [0,0,0];
 
 var currentColor = 0x81D4FA;
@@ -35,9 +35,15 @@ var translationalVariance = 2; // pixels
 var systemRotationalVariance = 0; // radians
 var systemTranslationalVariance = 0; // radians
 
-var markerXPositions = [0, -4/6, -4/6, 7/6, 7/6];
-var markerYPositions = [0,0,4/6, 0, 4/6];
-var markerSizes = [1, 3/6, 3/6, 3/6, 3/6];
+var markerPositions = {
+                        0: [0, 0,0],
+                        1: [-5.5/6,0,0],
+                        2: [-5.5/6,-2.5/6,0],
+                        3: [5.5/6, 0,0],
+                        4: [5.5/6, -2.5/6,0]
+                        };
+                        
+var markerSizes = {1: 1, 2: 3/6, 3: 3/6, 4: 3/6, 5: 3/6};
 
 var poseFilter;
 var rotXFilter;
@@ -379,6 +385,7 @@ function createScenes() {
   scene3.add(texture);
 
   model = createModel();
+  debugObjects = {};
 
   scene4.add(model);
 };
@@ -387,7 +394,7 @@ function createTexture() {
   var texture = new THREE.Texture(video);
   texture.minFilter = THREE.LinearFilter;
   var object = new THREE.Object3D();
-  var geometry = new THREE.PlaneGeometry(1.0, 1.0, 0.0);
+  var geometry = new THREE.PlaneBufferGeometry(1.0, 1.0, 0.0);
   var material = new THREE.MeshBasicMaterial({
     map: texture,
     depthTest: false,
@@ -503,6 +510,19 @@ function updateModelGeometry() {
   //model.scale.set(5,5,5);
 }
 
+function createDebugObject(markSize){
+  var object = new THREE.Object3D();
+  var plane = new THREE.PlaneGeometry(markSize,markSize,0.0);
+  var material = new THREE.MeshBasicMaterial({
+    color: 0xFF0000,
+    depthTest: false,
+    depthWrite: false
+  });
+  var mesh = new THREE.Mesh(plane, material);
+  object.add(mesh);
+  return object;
+}
+
 function createModelFromGeometry() {
   var object = new THREE.Object3D();
 
@@ -526,6 +546,38 @@ function createModel() {
   return object;
 }
 
+function clearDebugObjects(){
+  for (var id in debugObjects){
+    var object = debugObjects[id];
+    scene4.remove(object);
+  }
+}
+
+function createDebugObjects(poses){
+  clearDebugObjects();
+  for (var i =0 ;i < poses.length; i++){
+    var pose = poses[i][1];
+    var id = poses[i][0];
+    var rot = getRotationParams(pose.bestRotation);
+    var size = markSize;
+      if (markerSizes.length >= id){
+        var size = markerSizes[id] * markSize;
+        var pos = markerPositions[id];
+      }
+      console.log(size);
+    var obj;
+
+    if (!debugObjects.hasOwnProperty(id)){
+      obj = createDebugObject(size);
+    } else {
+      obj = debugObjects[id];
+    }
+    debugObjects[id] = obj;
+    updateObject(obj, rot, pose.bestTranslation);
+    scene4.add(obj);
+    }
+}
+
 function updateScenes(markers) {
   var corners, corner, pose, i;
   var poses = [];
@@ -539,11 +591,24 @@ function updateScenes(markers) {
         corner.x = corner.x - (canvas.width / 2);
         corner.y = (canvas.height / 2) - corner.y;
       }
-      poses.push([markers[i].id, posit.pose(corners)]);
+      var id = markers[i].id;
+      var size = markSize;
+      var pos = [0,0,0];
+      if (markerSizes.hasOwnProperty(id)){
+        var size = markerSizes[id] * markSize;
+        //console.log(size);
+        console.log(id);
+        var pos = markerPositions[id];
+      }
+
+      var markPose = posit.pose(corners, size, [pos[0]*markSize, pos[1]*markSize, pos[2]*markSize]);
+
+      poses.push([markers[i].id, markPose]);
     }
     
-    console.log(poses);
-    pose = posit.pose(corners);
+    //console.log(poses);
+    createDebugObjects(poses);
+    pose = posit.pose(corners, markSize, [0,0,0]);
 
     if (!hasTarget) {
       hasTarget = true;
