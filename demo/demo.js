@@ -11,7 +11,7 @@ var loadedGeometry;
 var currentScale = 1.0;
 var currentOpacity = .85;
 var currentHeight = 30;
-var currentRotation = 0.0;
+var currentRotation = [0,0,0];
 
 var currentColor = 0x73DCFF;
 var missingColor = 0xEF5350;
@@ -29,10 +29,10 @@ var oscillateOpacity = true;
 
 var estimationCertainty = 1;
 
-var rotationalVariance = 2 * 0.0174533; // radians
+var rotationalVariance = degToRad(.5); // radians
 var translationalVariance = 2; // pixels
 
-var systemRotationalVariance = 0 * .0174533; // radians
+var systemRotationalVariance = 0; // radians
 var systemTranslationalVariance = 0; // radians
 
 
@@ -101,6 +101,30 @@ function getRotationParams(rotation) {
   return [rotX, rotY, rotZ];
 }
 
+function setXRotation(angle){
+  currentRotation[0] = degToRad(angle);
+  updateRotation();
+}
+
+function setYRotation(angle){
+  currentRotation[1] = degToRad(angle);
+  updateRotation();
+}
+
+function setZRotation(angle){
+  currentRotation[2] = degToRad(angle);
+  updateRotation();
+}
+
+function setRotation(rotation){
+  currentRotation = rotation;
+  updateRotation();
+}
+
+function updateRotation(){
+  setupModelMesh();
+}
+
 //from: http://stackoverflow.com/questions/25744984/implement-a-kalman-filter-to-smooth-data-from-deviceorientation-api
 //from: https://github.com/itamarwe/kalman
 function createKalmanFilter(pose) {
@@ -143,6 +167,18 @@ function createKalmanFilter(pose) {
 
   var KM = new KalmanModel(x_0, P_0, F_k, Q_k);
   return KM;
+}
+
+/* Returns the the radian value of the specified degrees in the range of (-PI, PI] */
+function degToRad(degrees) {
+    var res = degrees / 180 * Math.PI;
+    return res;
+}
+
+/* Returns the radian value of the specified radians in the range of [0,360), to a precision of four decimal places.*/
+function radToDeg(radians) {
+    var res = radians * 180 / Math.PI;
+    return res;
 }
 
 function createKalmanObservation(pose) {
@@ -365,7 +401,6 @@ function createTexture() {
 
 function setupModelMesh() {
   if (model != null) {
-
     setupHologramMesh(model.children[0]);
   }
 }
@@ -402,8 +437,6 @@ function updateMaterial(){
 function updateColor(){
   if (hasTarget){
     hologramMaterial.color.setHex(currentColor);
-    console.log(currentColor);
-    console.log(hologramMaterial.color);
   } else {
     hologramMaterial.color.setHex(missingColor);
   }
@@ -448,15 +481,12 @@ function setOpacity(opacity) {
 function setupHologramMesh(mesh) {
   mesh.scale.set(1, 1, 1);
   mesh.position.set(0, 0, 0);
-  mesh.rotation.set(0, 0, 0);
-
+  mesh.rotation.set(currentRotation[0], currentRotation[1], currentRotation[2]);
   mesh.scale.multiplyScalar(currentScale);
+  mesh.geometry.center();
 
   var box = new THREE.Box3().setFromObject(mesh);
-  if (currentFlip) {
-    mesh.rotation.set(Math.PI, 0, 0);
-    mesh.position.set(0, 0, box.size().z);
-  }
+  mesh.position.set(0, 0, 0);
   mesh.position.set(-1 / 7, 0, mesh.position.z + currentHeight);
 }
 
