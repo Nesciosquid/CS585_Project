@@ -22,11 +22,11 @@ var oscillateOpacity = true;
 
 var estimationCertainty = 1;
 
-var rotationalVariance = 5 * 0.0174533; // radians
+var rotationalVariance = 2 * 0.0174533; // radians
 var translationalVariance = 2; // pixels
 
-var systemRotationalVariance = .5 * .0174533; // radians
-var systemTranslationalVariance = .5; // radians
+var systemRotationalVariance = 0 * .0174533; // radians
+var systemTranslationalVariance = 0; // radians
 
 
 var poseFilter;
@@ -201,6 +201,13 @@ function onLoad() {
   if (navigator.getUserMedia) {
     init();
   }
+
+  /*
+  var opa = document.getElementById("opacitySlider");
+  opa.oninput = function(){
+    setOpacity(parseFloat(opa.value));
+  };
+  */
 };
 
 function init() {
@@ -473,6 +480,9 @@ function updateScenes(markers) {
       rotXFilter = createSingleParameterFilter(rotParams[0], 0, systemRotationalVariance);
       rotYFilter = createSingleParameterFilter(rotParams[1], 0, systemRotationalVariance);
       rotZFilter = createSingleParameterFilter(rotParams[2], 0, systemRotationalVariance);
+      transXFilter = createSingleParameterFilter(pose.bestTranslation[0], 0, systemTranslationalVariance);
+      transYFilter = createSingleParameterFilter(pose.bestTranslation[1], 0, systemTranslationalVariance);
+      transZFilter = createSingleParameterFilter(pose.bestTranslation[2], 0, systemTranslationalVariance);
     }
   } else {
     if (hasTarget){
@@ -489,29 +499,25 @@ function updateScenes(markers) {
     var rotXVel;
     var rotYVel;
     var rotZVel;
-
-    if (pose.bestError < 3 && pose.alternativeError < 3 && lastPose != null){
-      var altRotParams = getRotationParams(pose.alternativeRotation);
-      var lastRotParams = getRotationParams(lastPose.bestRotation);
-      var diffParams = Math.pow((rotParams[0] - lastRotParams[0]),2) + Math.pow((rotParams[1] - lastRotParams[1]),2) + Math.pow((rotParams[2] - lastRotParams[2]),2);
-      var diffAltParams = Math.pow((altRotParams[0] - altRotParams[0]),2) + Math.pow((altRotParams[1] - altRotParams[1]),2) + Math.pow((altRotParams[2] - altRotParams[2]),2);
-
-      if (diffParams > diffAltParams){
-        rotParams = altRotParams;
-        pose.bestRotation = pose.alternativeRotation;
-      }
-    }
+    var transXVel;
+    var transYVel;
+    var transZVel;
 
     if (lastPose == null){
       rotXVel = 0;
       rotYVel = 0;
       rotZVel = 0;
+      transXVel = 0;
+      transYVel = 0;
+      transZVel = 0;
     } else {
-
       var lastRotParams = getRotationParams(lastPose.bestRotation);
-      var rotXVel = rotParams[0] - lastRotParams[0];
-      var rotYVel = rotParams[0] - lastRotParams[0];
-      var rotZVel = rotParams[0] - lastRotParams[0];
+      rotXVel = rotParams[0] - lastRotParams[0];
+      rotYVel = rotParams[1] - lastRotParams[1];
+      rotZVel = rotParams[2] - lastRotParams[2];
+      transXVel = pose.bestTranslation[0] - lastPose.bestTranslation[0];
+      transYVel = pose.bestTranslation[1] - lastPose.bestTranslation[1];
+      transZVel = pose.bestTranslation[2] - lastPose.bestTranslation[2];
     }
 
     var rotXObs = createSingleParameterObservation(rotParams[0], rotXVel, rotationalVariance);
@@ -523,14 +529,25 @@ function updateScenes(markers) {
     var rotZObs = createSingleParameterObservation(rotParams[2], rotZVel, rotationalVariance);
     var rotZFiltered = updateSingleParameterKalmanModel(rotZFilter, rotZObs);
 
+    var transXObs = createSingleParameterObservation(pose.bestTranslation[0], transXVel, translationalVariance);
+    var transXFiltered = updateSingleParameterKalmanModel(transXFilter, transXObs);
+
+    var transYObs = createSingleParameterObservation(pose.bestTranslation[1], transYVel, translationalVariance);
+    var transYFiltered = updateSingleParameterKalmanModel(transYFilter, transYObs);
+
+    var transZObs = createSingleParameterObservation(pose.bestTranslation[2], transZVel, translationalVariance);
+    var transZFiltered = updateSingleParameterKalmanModel(transZFilter, transZObs);
+
     var rot = [obs.z_k.elements[0], obs.z_k.elements[1], obs.z_k.elements[2]];
     //var filteredRot = [filtered[0], filtered[1], filtered[2]];
     var filteredRot = [rotXFiltered[0], rotYFiltered[0], rotZFiltered[0]];
 
     var rotDiff = [rot[0] - filteredRot[0], rot[1] - filteredRot[1], rot[2] - filteredRot[2]];
-    var filteredTrans = [filtered[3], filtered[4], filtered[5]];
+    //var filteredTrans = [filtered[3], filtered[4], filtered[5]];
+    var filteredTrans = [transXFiltered[0], transYFiltered[0], transZFiltered[0]];
 
     lastPose = pose; 
+    //console.log(filteredTrans);
 
     updateObject(model, filteredRot, filteredTrans);
     updatePose("pose1", pose.bestError, pose.bestRotation, pose.bestTranslation);
@@ -606,6 +623,7 @@ function DnDFileController(selector, onDropCallback) {
 
 function loadSTLFromFile(buffer) {
   loadedGeometry = loadStl(buffer);
+  setScale(1);
   updateModelGeometry(loadedGeometry);
 }
 

@@ -38,38 +38,44 @@
   
   <div id="main_window" class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
               mdl-layout--overlay-drawer-button ">
-              <div id="button_drawer" class="mdl-layout__drawer">
-        <span class="mdl-layout-title">Holographic STL Viewer</span><br><br>
-        <center>Click and drag to create nodes.</center><br>
-        <nav class="mdl-navigation" id="feature-controls">
-        </nav>
-      </div>
-      <main class="mdl-layout__content">
-        <div id="view_container" class="page-content">
-          <canvas id="canvas" style="margin-left:auto; width: 640px; height: 480px; float: left; border: solid 1px black; display: none;"></canvas>
-          <div id="container" style="margin-left:auto; width: 640px; height: 480px; float: left; border: solid 1px black; background: green;"></div>
-          <div style="clear: both;"></div>
+    <div id="button_drawer" class="mdl-layout__drawer">
+      <h4>Holographic STL Viewer</h4><br><br>
+      <center>Drag an STL file into the viewing window to load it.</center><br>
+      <!-- Slider with Starting Value -->
+      <h5>Opacity</h5>
+      <input id = "opacitySlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="1" value=".8" tabindex="0" step = ".05" oninput="setOpacity(parseFloat(this.value))">
+      <h5>Scale</h5>
+      <input id = "scaleSlider" class="mdl-slider mdl-js-slider" type="range" min=".25" max="5" value="1" tabindex="1" step = ".25" oninput="setScale(parseFloat(this.value))">
+      <h5>Height</h5>
+      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="150" value="30" tabindex="2" step="5" oninput="setHeight(parseFloat(this.value))">
+      <nav class="mdl-navigation" id="feature-controls">
+      </nav>
+    </div>
+    <main class="mdl-layout__content">
+      <div id="view_container" class="page-content">
+        <canvas id="canvas" style="margin-left:auto; width: 640px; height: 480px; float: left; border: solid 1px black; display: none;"></canvas>
+        <div id="container" style="margin-left:auto; width: 640px; height: 480px; float: left; border: solid 1px black; background: green;"></div>
+        <div style="clear: both;"></div>
           <div style="float: left; border: solid 1px black;">
-          <div style="width: 100%;">
-          <div style="width: 650px; margin-left:auto; margin-right:auto;">
-          <div style="float: left; border: solid 1px black;">
-          <div id="pose1" style="display:show;"></div>
-          </div>
-          <div style="float: left; border: solid 1px black;">
-          <div id="pose2" style="display:show;"></div>
-          </div>
-          <div id="filter" style="display:show;"></div>
-          </div>
-          <div id="diff" style="display:show;"></div>
-          </div>
-          </div>
-          </div>
-  <div style="clear: both;"></div>
-  <div style="margin: 15px;"><strong>Powered by <a href="http://code.google.com/p/js-aruco/">js-aruco</a> and <a href="https://github.com/mrdoob/three.js">Three.js</a></strong></div>
+            <div style="width: 100%;">
+              <div style="width: 650px; margin-left:auto; margin-right:auto;">
+                <div style="float: left; border: solid 1px black;">
+                  <div id="pose1" style="display:show;"></div>
+                </div>
+                <div style="float: left; border: solid 1px black;">
+                  <div id="pose2" style="display:show;"></div>
+                </div>
+              <div id="filter" style="display:show;"></div>
+            </div>
+            <div id="diff" style="display:show;"></div>
           </div>
         </div>
-      </main>
-    <div>
+      </div>
+      <div style="clear: both;"></div>
+      <div style="margin: 15px;"><strong>Powered by <a href="http://code.google.com/p/js-aruco/">js-aruco</a> and <a href="https://github.com/mrdoob/three.js">Three.js</a></strong></div>
+    </div>
+  </main>
+<div>
 
   
 
