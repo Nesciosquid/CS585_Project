@@ -35,6 +35,9 @@ var translationalVariance = 2; // pixels
 var systemRotationalVariance = 0; // radians
 var systemTranslationalVariance = 0; // radians
 
+var markerXPositions = [0, -4/6, -4/6, 7/6, 7/6];
+var markerYPositions = [0,0,4/6, 0, 4/6];
+var markerSizes = [1, 3/6, 3/6, 3/6, 3/6];
 
 var poseFilter;
 var rotXFilter;
@@ -525,17 +528,21 @@ function createModel() {
 
 function updateScenes(markers) {
   var corners, corner, pose, i;
+  var poses = [];
 
   if (markers.length > 0) {
-    corners = markers[0].corners;
+    for (var i =0 ;i < markers.length; i ++){
+      corners = markers[i].corners;
 
-    for (i = 0; i < corners.length; ++i) {
-      corner = corners[i];
-
-      corner.x = corner.x - (canvas.width / 2);
-      corner.y = (canvas.height / 2) - corner.y;
+      for (j = 0; j < corners.length; j++) {
+        corner = corners[j];
+        corner.x = corner.x - (canvas.width / 2);
+        corner.y = (canvas.height / 2) - corner.y;
+      }
+      poses.push([markers[i].id, posit.pose(corners)]);
     }
-
+    
+    console.log(poses);
     pose = posit.pose(corners);
 
     if (!hasTarget) {
