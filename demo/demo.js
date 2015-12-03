@@ -13,11 +13,18 @@ var currentOpacity = .85;
 var currentHeight = 30;
 var currentRotation = 0.0;
 
+var currentColor = 0x73DCFF;
+var missingColor = 0xEF5350;
+
 var currentFlip = false;
 var rotationTime = 30; // seconds
 var heightDifference = .2; // of model height
-var opacityDifference = .05;
-var opacityCycle = .005; // lower == slower
+var opacityMissing = .3;
+var opacityLocked = .05;
+var opacityDifference = opacityLocked;
+var opacityMissingCycle = .015;
+var opacityLockedCycle = .005;
+var opacityCycle = opacityLockedCycle; // lower == slower
 var oscillateOpacity = true;
 
 var estimationCertainty = 1;
@@ -387,9 +394,37 @@ function updateScale() {
   setupModelMesh();
 }
 
+function updateMaterial(){
+  updateOpacity();
+  updateColor();
+}
+
+function updateColor(){
+  if (hasTarget){
+    hologramMaterial.color.setHex(currentColor);
+    console.log(currentColor);
+    console.log(hologramMaterial.color);
+  } else {
+    hologramMaterial.color.setHex(missingColor);
+  }
+}
+
 function updateOpacity() {
+  if (hasTarget){
+    opacityDifference = opacityLocked;
+    opacityCycle = opacityLockedCycle;
+  } else {
+    opacityDifference = opacityMissing;
+    opacityCycle = opacityMissingCycle;
+  }
   if (oscillateOpacity) {
-    var newVal = currentOpacity + (opacityDifference * Math.sin(new Date().getTime() * opacityCycle));
+    var newVal;
+    var diff = opacityDifference * Math.sin(new Date().getTime() * opacityCycle);
+    if (!hasTarget && diff > 0){
+      newVal = currentOpacity - diff;
+    } else {
+      newVal = currentOpacity + diff;
+    }
     if (newVal < 0) {
       newVal = 0;
     } else if (newVal > 1) {
@@ -554,10 +589,8 @@ function updateScenes(markers) {
     updatePose("pose2", pose.alternativeError, pose.alternativeRotation, pose.alternativeTranslation);
     var d = document.getElementById("filter");
     d.innerHTML = " filtered: " + Math.round(filteredRot[0] * 180.0 / Math.PI) + ", " + Math.round(filteredRot[1] * 180.0 / Math.PI) + ", " + Math.round(filteredRot[2] * 180.0 / Math.PI) + "<br/>" + " diff: " + Math.round(rotDiff[0] * 180.0 / Math.PI) + ", " + Math.round(rotDiff[1] * 180.0 / Math.PI) + ", " + Math.round(rotDiff[2] * 180.0 / Math.PI);
-    updateOpacity();
   }
-
-
+    updateMaterial();
   //step += 0.005;
 
   //model.rotation.z -= step;
