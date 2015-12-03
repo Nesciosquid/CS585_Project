@@ -35,6 +35,7 @@ var translationalVariance = 2; // pixels
 var systemRotationalVariance = 0; // radians
 var systemTranslationalVariance = 0; // radians
 
+var markSize = 33.0; //millimeters
 var markerXPositions = [0, -4/6, -4/6, 7/6, 7/6];
 var markerYPositions = [0,0,4/6, 0, 4/6];
 var markerSizes = [1, 3/6, 3/6, 3/6, 3/6];
@@ -63,7 +64,6 @@ var hologramMaterial = new THREE.MeshLambertMaterial({
   emissive: 0x111111
 });
 
-var markSize = 40.0; //millimeters
 
 function createSingleParameterFilter(value, velocity, systemVariance) {
   var x_0 = $V([value, velocity]);
