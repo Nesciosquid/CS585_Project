@@ -39,6 +39,14 @@ var systemTranslationalVariance = 0; // radians
 var lastPosition = [0,0,0];
 var lastRotation = [0,0,0];
 
+var filmPass;
+var filmPassStaticIntensity = .4;
+var filmPassLineIntensity = .7;
+var badTVPass;
+var badTVPassMinDistortion = 2;
+var badTVPassMaxDistortion = 10;
+var shaderTime = 0;
+
 var markSize = 33.0; //millimeters
 /*
 var markerPositions = {
@@ -330,6 +338,11 @@ function tick() {
     var markers = detector.detect(imageData);
     updateScenes(markers);
 
+    shaderTime +=.1;
+
+    filmPass.uniforms[ "time" ].value = shaderTime;
+    badTVPass.uniforms[ "time" ].value = shaderTime;
+
     render();
   }
 };
@@ -389,20 +402,29 @@ function createRenderers() {
   var maskPass = new THREE.MaskPass(scene4, camera4);
   var clearMaskPass = new THREE.ClearMaskPass();
 
-  var filmPass = new THREE.FilmPass();
+  filmPass = new THREE.FilmPass();
   filmPass.uniforms[ "sCount" ].value = 600;
-  filmPass.uniforms[ "sIntensity" ].value = .9;
-  filmPass.uniforms[ "nIntensity" ].value = .5;
+  filmPass.uniforms[ "sIntensity" ].value = filmPassLineIntensity;
+  filmPass.uniforms[ "nIntensity" ].value = filmPassStaticIntensity;
   filmPass.uniforms[ "grayscale" ].value = false;
 
   var copyPass = new THREE.ShaderPass(THREE.CopyShader);
   copyPass.renderToScreen = true;
+
+  badTVPass = new THREE.ShaderPass(THREE.BadTVShader);
+  badTVPass.uniforms[ "tDiffuse" ].value = null;
+  badTVPass.uniforms[ "time" ].value =  0.1;
+  badTVPass.uniforms[ "distortion" ].value = 0.1;
+  badTVPass.uniforms[ "distortion2" ].value = badTVPassMinDistortion;
+  badTVPass.uniforms[ "speed" ].value = 0.05;
+  badTVPass.uniforms[ "rollSpeed" ].value =  0;
 
   //bgComposer.addPass(maskPass);
   bgComposer.addPass(renderVideoPass);
   bgComposer.addPass(renderModelPass);
   bgComposer.addPass(maskPass);
   bgComposer.addPass(filmPass);
+  bgComposer.addPass(badTVPass);
   bgComposer.addPass(clearMaskPass);
   bgComposer.addPass(copyPass);
 
@@ -490,9 +512,11 @@ function updateColor(){
 
 function updateOpacity() {
   if (hasTarget){
+    badTVPass.uniforms[ "distortion2" ].value = badTVPassMinDistortion;
     opacityDifference = opacityLocked;
     opacityCycle = opacityLockedCycle;
   } else {
+    badTVPass.uniforms[ "distortion2" ].value = badTVPassMaxDistortion;
     opacityDifference = opacityMissing;
     opacityCycle = opacityMissingCycle;
   }
