@@ -41,9 +41,11 @@ var lastRotation = [0,0,0];
 
 var filmPass;
 var filmPassStaticIntensity = .4;
-var filmPassLineIntensity = .7;
+var filmPassLineIntensity = .75;
 var badTVPass;
-var badTVPassMinDistortion = 2;
+var badTVPassSpeed = .025;
+var badTVPassSpeedMax = .05;
+var badTVPassMinDistortion = 1.5;
 var badTVPassMaxDistortion = 10;
 var shaderTime = 0;
 
@@ -416,8 +418,8 @@ function createRenderers() {
   badTVPass.uniforms[ "time" ].value =  0.1;
   badTVPass.uniforms[ "distortion" ].value = 0.1;
   badTVPass.uniforms[ "distortion2" ].value = badTVPassMinDistortion;
-  badTVPass.uniforms[ "speed" ].value = 0.05;
-  badTVPass.uniforms[ "rollSpeed" ].value =  0;
+  badTVPass.uniforms[ "speed" ].value = badTVPassSpeed;
+  badTVPass.uniforms[ "rollSpeed" ].value = 0;
 
   //bgComposer.addPass(maskPass);
   bgComposer.addPass(renderVideoPass);
@@ -513,10 +515,14 @@ function updateColor(){
 function updateOpacity() {
   if (hasTarget){
     badTVPass.uniforms[ "distortion2" ].value = badTVPassMinDistortion;
+    badTVPass.uniforms[ "speed" ].value = badTVPassSpeed;
+
     opacityDifference = opacityLocked;
     opacityCycle = opacityLockedCycle;
   } else {
     badTVPass.uniforms[ "distortion2" ].value = badTVPassMaxDistortion;
+    badTVPass.uniforms[ "speed" ].value = badTVPassSpeedMax;
+
     opacityDifference = opacityMissing;
     opacityCycle = opacityMissingCycle;
   }
