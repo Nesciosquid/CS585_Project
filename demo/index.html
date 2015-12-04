@@ -29,6 +29,9 @@
   <script type="text/javascript" src="./libs/ShaderPass.js"></script>
   <script type="text/javascript" src="./libs/RenderPass.js"></script>
   <script type="text/javascript" src="./libs/MaskPass.js"></script>
+  <script type="text/javascript" src="./libs/FilmPass.js"></script>
+  <script type="text/javascript" src="./libs/FilmShader.js"></script>
+
 
 </head>
 
@@ -43,11 +46,11 @@
       <center>Drag an STL file into the viewing window to load it.</center><br>
       <!-- Slider with Starting Value -->
       <h5>Opacity</h5>
-      <input id = "opacitySlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="1" value=".8" tabindex="0" step = ".05" oninput="setOpacity(parseFloat(this.value))">
+      <input id = "opacitySlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="1" value=".7" tabindex="0" step = ".05" oninput="setOpacity(parseFloat(this.value))">
       <h5>Scale</h5>
       <input id = "scaleSlider" class="mdl-slider mdl-js-slider" type="range" min=".25" max="5" value="1" tabindex="1" step = ".25" oninput="setScale(parseFloat(this.value))">
       <h5>Height</h5>
-      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="150" value="30" tabindex="2" step="5" oninput="setHeight(parseFloat(this.value))">
+      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="150" value="50" tabindex="2" step="5" oninput="setHeight(parseFloat(this.value))">
       <nav class="mdl-navigation" id="feature-controls">
       <h5>Rotate X</h5>
       <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="-180" max="180" value="0" tabindex="3" step="5" oninput="setXRotation(parseFloat(this.value))">

@@ -7,10 +7,11 @@ var bgComposer, modelComposer, maskComposer;
 var model, texture;
 var step = 0.0;
 var loadedGeometry;
+var loadedBoundingBox;
 
 var currentScale = 1.0;
-var currentOpacity = .85;
-var currentHeight = 0;
+var currentOpacity = .7;
+var currentHeight = 50;
 var currentRotation = [0,0,0];
 
 var currentColor = 0x81D4FA;
@@ -19,7 +20,7 @@ var missingColor = 0xB39DDB;
 var currentFlip = false;
 var rotationTime = 30; // seconds
 var heightDifference = .2; // of model height
-var opacityMissing = .3;
+var opacityMissing = .4;
 var opacityLocked = .05;
 var opacityDifference = opacityLocked;
 var opacityMissingCycle = .015;
@@ -35,16 +36,38 @@ var translationalVariance = 2; // pixels
 var systemRotationalVariance = 0; // radians
 var systemTranslationalVariance = 0; // radians
 
+var lastPosition = [0,0,0];
+var lastRotation = [0,0,0];
+
 var markSize = 33.0; //millimeters
+/*
 var markerPositions = {
                         0: [0, 0,0],
                         1: [-5.5/6,0,0],
                         2: [-5.5/6,-2.5/6,0],
-                        3: [5.5/6, 0,0],
+                        3: [5.5/6, 00,],
                         4: [5.5/6, -2.5/6,0]
                         };
                         
-var markerSizes = {1: 1, 2: 3/6, 3: 3/6, 4: 3/6, 5: 3/6};
+var markerSizes = {0: 1, 1: 3/6, 2: 3/6, 3: 3/6, 4: 3/6};
+*/
+
+var markerPositions = {
+                        0: [0,0,0],
+                        1: [-30.25,13.75,0],
+                        2: [-30.25, -13.75,0],
+                        3: [30.25, 13.75,0],
+                        4: [30.25, -13.75, 0]
+                        };
+
+var smallMarks = {
+  1: true,
+  2: true,
+  3: true,
+  4: true
+}
+                        
+var markerSizes = {0: markSize, 1: markSize/2, 2: markSize/2, 3: markSize/2, 4: markSize/2};
 
 var poseFilter;
 var rotXFilter;
@@ -260,6 +283,7 @@ function onLoad() {
     setOpacity(parseFloat(opa.value));
   };
   */
+  currentHeight = 50;
 };
 
 function init() {
@@ -280,6 +304,7 @@ function init() {
 
   detector = new AR.Detector();
   posit = new POS.Posit(markSize, canvas.width);
+  positSmall = new POS.Posit(markSize/2, canvas.width);
 
   createRenderers();
   createScenes();
@@ -345,12 +370,13 @@ function createRenderers() {
   scene4.add(lights[1]);
   scene4.add(lights[2]);
 
-
   // From: http://www.airtightinteractive.com/2013/02/intro-to-pixel-shaders-in-three-js/
   // postprocessing
 
 
-  bgComposer = new THREE.EffectComposer(renderer3);
+  var rtParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: true };
+
+  bgComposer = new THREE.EffectComposer(renderer3, new THREE.WebGLRenderTarget(canvas.width * 2, canvas.height * 2, rtParameters ));
   modelComposer = new THREE.EffectComposer(renderer3);
   maskComposer = new THREE.EffectComposer(renderer3);
 
@@ -360,14 +386,24 @@ function createRenderers() {
   var renderModelPass = new THREE.RenderPass(scene4, camera4);
   renderModelPass.clear = false;
 
-  var renderMaskPass = new THREE.RenderPass(scene5, camera4);
-  renderMaskPass.clear = false;
+  var maskPass = new THREE.MaskPass(scene4, camera4);
+  var clearMaskPass = new THREE.ClearMaskPass();
+
+  var filmPass = new THREE.FilmPass();
+  filmPass.uniforms[ "sCount" ].value = 600;
+  filmPass.uniforms[ "sIntensity" ].value = .9;
+  filmPass.uniforms[ "nIntensity" ].value = .5;
+  filmPass.uniforms[ "grayscale" ].value = false;
 
   var copyPass = new THREE.ShaderPass(THREE.CopyShader);
   copyPass.renderToScreen = true;
 
+  //bgComposer.addPass(maskPass);
   bgComposer.addPass(renderVideoPass);
   bgComposer.addPass(renderModelPass);
+  bgComposer.addPass(maskPass);
+  bgComposer.addPass(filmPass);
+  bgComposer.addPass(clearMaskPass);
   bgComposer.addPass(copyPass);
 
 };
@@ -493,11 +529,15 @@ function setupHologramMesh(mesh) {
   mesh.position.set(0, 0, 0);
   mesh.rotation.set(currentRotation[0], currentRotation[1], currentRotation[2]);
   mesh.scale.multiplyScalar(currentScale);
-  mesh.geometry.center();
 
-  var box = new THREE.Box3().setFromObject(mesh);
+  var heightOffset = 0;
+  if(loadedGeometry){
+    console.log(loadedGeometry.boundingBox);
+    heightOffset = loadedGeometry.boundingBox.min.z * currentScale;
+  }
+  console.log(heightOffset);
   mesh.position.set(0, 0, 0);
-  mesh.position.set(-1 / 7, 0, mesh.position.z + currentHeight);
+  mesh.position.set(-1 / 7, 0, -heightOffset + currentHeight);
 }
 
 function updateModelGeometry() {
@@ -510,16 +550,14 @@ function updateModelGeometry() {
   //model.scale.set(5,5,5);
 }
 
-function createDebugObject(markSize){
-  var object = new THREE.Object3D();
-  var plane = new THREE.PlaneGeometry(markSize,markSize,0.0);
-  var material = new THREE.MeshBasicMaterial({
-    color: 0xFF0000,
-    depthTest: false,
-    depthWrite: false
-  });
-  var mesh = new THREE.Mesh(plane, material);
+function createDebugObject(){
+  var object = new THREE.Object3D(),
+      geometry = new THREE.PlaneGeometry(1.0, 1.0, 0.0),
+      material = new THREE.MeshNormalMaterial(),
+      mesh = new THREE.Mesh(geometry, material);
+  
   object.add(mesh);
+  
   return object;
 }
 
@@ -553,6 +591,49 @@ function clearDebugObjects(){
   }
 }
 
+function calculatePosePosition(markPose, id){
+  var params = getRotationParams(markPose.bestRotation);
+  var trans = markPose.bestTranslation;
+  var transVec = new THREE.Vector3(trans[0], trans[1], trans[2]);
+  var pivot = new THREE.Object3D();
+  var ori = new THREE.Object3D();
+  var offset = [0,0,0];
+  if (markerPositions.hasOwnProperty(id)){
+    offset = markerPositions[id];
+  }
+  pivot.position.set(offset[0], offset[1], offset[2]);
+  //console.log(pivot.position);
+  ori.add(pivot);
+  ori.rotation.set(params[0], params[1], params[2]);
+  ori.updateMatrixWorld();
+  var vec = new THREE.Vector3();
+  vec.setFromMatrixPosition(pivot.matrixWorld);
+  //console.log(vec);
+  transVec.sub(vec);
+
+  return transVec;
+}
+
+function createBestPose(poses){
+  var translations = new THREE.Vector3(0,0,0);
+  for (var i =0 ;i < poses.length; i++){
+    var pose = poses[i][1];
+    var id = poses[i][0];
+    var rot = getRotationParams(pose.bestRotation);
+    var size = markSize;
+    var pos = new THREE.Vector3(pose.bestTranslation[0], pose.bestTranslation[1], pose.bestTranslation[2]);
+    if (markerSizes.hasOwnProperty(id)){
+      size = markerSizes[id];
+      pos = calculatePosePosition(pose, id);
+    }
+    //console.log(size);
+    translations.add(pos);
+  }
+  translations.multiplyScalar(1/poses.length);
+  translations.toArray(poses[0][1].bestTranslation);
+  return poses[0][1];
+}
+
 function createDebugObjects(poses){
   clearDebugObjects();
   for (var i =0 ;i < poses.length; i++){
@@ -560,22 +641,46 @@ function createDebugObjects(poses){
     var id = poses[i][0];
     var rot = getRotationParams(pose.bestRotation);
     var size = markSize;
-      if (markerSizes.length >= id){
-        var size = markerSizes[id] * markSize;
-        var pos = markerPositions[id];
-      }
-      console.log(size);
+    var pos = new THREE.Vector3(pose.bestTranslation[0], pose.bestTranslation[1], pose.bestTranslation[2]);
+    if (markerSizes.hasOwnProperty(id)){
+      size = markerSizes[id];
+      pos = calculatePosePosition(pose, id);
+    }
+    //console.log(size);
     var obj;
 
     if (!debugObjects.hasOwnProperty(id)){
-      obj = createDebugObject(size);
+      obj = createDebugObject();
+      obj.scale.x = size;
+      obj.scale.y = size;
+      obj.scale.z = size;
     } else {
       obj = debugObjects[id];
     }
     debugObjects[id] = obj;
-    updateObject(obj, rot, pose.bestTranslation);
+    updateObject(obj, rot, [pos.x, pos.y, pos.z]);
     scene4.add(obj);
     }
+}
+
+function fixRotation(newRotation, oldRotation){
+  // TODO: should be using quaternions
+  var xFix = fixSingleAxisRotation(newRotation[0], oldRotation[0]);
+  var yFix = fixSingleAxisRotation(newRotation[1], oldRotation[1]);
+  var zFix = fixSingleAxisRotation(newRotation[2], oldRotation[2]);
+  return [xFix, yFix, zFix];
+}
+
+function fixSingleAxisRotation(newRotation, oldRotation){
+  var min, max, diff, fixed;
+
+  var diff = Math.abs(oldRotation - newRotation);
+  if (diff >= Math.PI){
+    if (newRotation > oldRotation){
+      fixed = newRotation - (2*Math.PI);
+    } else fixed = newRotation+ (2*Math.PI);
+  } else fixed = newRotation;
+  return fixed;
 }
 
 function updateScenes(markers) {
@@ -595,20 +700,23 @@ function updateScenes(markers) {
       var size = markSize;
       var pos = [0,0,0];
       if (markerSizes.hasOwnProperty(id)){
-        var size = markerSizes[id] * markSize;
+        var size = markerSizes[id];
         //console.log(size);
-        console.log(id);
+        //console.log(id);
         var pos = markerPositions[id];
       }
 
-      var markPose = posit.pose(corners, size, [pos[0]*markSize, pos[1]*markSize, pos[2]*markSize]);
-
+      var poseMaker;
+      if (smallMarks.hasOwnProperty(id)){
+        poseMaker = positSmall;
+      }  else poseMaker = posit;
+      var markPose = poseMaker.pose(corners, size, [pos[0], pos[1], pos[2]]);
       poses.push([markers[i].id, markPose]);
     }
     
-    //console.log(poses);
-    createDebugObjects(poses);
-    pose = posit.pose(corners, markSize, [0,0,0]);
+    //createDebugObjects(poses);
+    //pose = posit.pose(corners, markSize, [0,0,0]);
+    pose = createBestPose(poses);
 
     if (!hasTarget) {
       hasTarget = true;
@@ -631,7 +739,6 @@ function updateScenes(markers) {
   if (pose != null){
     var obs = createKalmanObservation(pose);
     var filtered = updateKalmanModel(obs);
-
     var rotParams = getRotationParams(pose.bestRotation);
     var rotXVel;
     var rotYVel;
@@ -648,14 +755,15 @@ function updateScenes(markers) {
       transYVel = 0;
       transZVel = 0;
     } else {
-      var lastRotParams = getRotationParams(lastPose.bestRotation);
-      rotXVel = rotParams[0] - lastRotParams[0];
-      rotYVel = rotParams[1] - lastRotParams[1];
-      rotZVel = rotParams[2] - lastRotParams[2];
-      transXVel = pose.bestTranslation[0] - lastPose.bestTranslation[0];
-      transYVel = pose.bestTranslation[1] - lastPose.bestTranslation[1];
-      transZVel = pose.bestTranslation[2] - lastPose.bestTranslation[2];
+      rotXVel = rotParams[0] - lastRotation[0];
+      rotYVel = rotParams[1] - lastRotation[1];
+      rotZVel = rotParams[2] - lastRotation[2];
+      transXVel = pose.bestTranslation[0] - lastPosition[0];
+      transYVel = pose.bestTranslation[1] - lastPosition[1];
+      transZVel = pose.bestTranslation[2] - lastPosition[2];
     }
+
+    var rotParams = fixRotation(rotParams, lastRotation);
 
     var rotXObs = createSingleParameterObservation(rotParams[0], rotXVel, rotationalVariance);
     var rotXFiltered = updateSingleParameterKalmanModel(rotXFilter, rotXObs);
@@ -684,6 +792,8 @@ function updateScenes(markers) {
     var filteredTrans = [transXFiltered[0], transYFiltered[0], transZFiltered[0]];
 
     lastPose = pose; 
+    lastRotation = filteredRot;
+    lastPosition = filteredTrans;
     //console.log(filteredTrans);
 
     updateObject(model, filteredRot, filteredTrans);
@@ -758,6 +868,7 @@ function DnDFileController(selector, onDropCallback) {
 
 function loadSTLFromFile(buffer) {
   loadedGeometry = loadStl(buffer);
+  loadedGeometry.computeBoundingBox();
   setScale(1);
   updateModelGeometry(loadedGeometry);
 }
