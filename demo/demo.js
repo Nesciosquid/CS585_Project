@@ -103,39 +103,6 @@ var hologramMaterial = new THREE.MeshLambertMaterial({
   emissive: 0x111111
 });
 
-
-function createSingleParameterFilter(value, velocity, systemVariance) {
-  var x_0 = $V([value, velocity]);
-  var P_0 = $M([
-    [estimationCertainty, 0],
-    [0, estimationCertainty]
-  ]);
-  var F_k = $M([
-    [1, 1],
-    [0, 1]
-  ]);
-  var Q_k = $M([
-    [systemVariance, 0],
-    [0, systemVariance]
-  ]);
-  var KM = new KalmanModel(x_0, P_0, F_k, Q_k);
-  return KM;
-}
-
-function createSingleParameterObservation(value, velocity, measurementVariance) {
-  var z_k = $V([value, velocity]);
-  var H_k = $M([
-    [1, 0],
-    [0, 1]
-  ]);
-  var R_k = $M([
-    [measurementVariance, 0],
-    [0, measurementVariance]
-  ]);
-  var KO = new KalmanObservation(z_k, H_k, R_k);
-  return KO;
-}
-
 function getRotationParams(rotation) {
   var rotX = -Math.asin(-rotation[1][2]);
   var rotY = -Math.atan2(rotation[0][2], rotation[2][2]);
@@ -167,107 +134,6 @@ function updateRotation(){
   setupModelMesh();
 }
 
-//from: http://stackoverflow.com/questions/25744984/implement-a-kalman-filter-to-smooth-data-from-deviceorientation-api
-//from: https://github.com/itamarwe/kalman
-function createKalmanFilter(pose) {
-  var rotation = pose.bestRotation;
-  var translation = pose.bestTranslation;
-
-  var rotX = -Math.asin(-rotation[1][2]);
-  var rotY = -Math.atan2(rotation[0][2], rotation[2][2]);
-  var rotZ = Math.atan2(rotation[1][0], rotation[1][1]);
-
-  var transX = translation[0];
-  var transY = translation[1];
-  var transZ = translation[2];
-
-  var x_0 = $V([rotX, rotY, rotZ, transX, transY, transZ]);
-  var P_0 = $M([
-    [estimationCertainty, 0, 0, 0, 0, 0],
-    [0, estimationCertainty, 0, 0, 0, 0],
-    [0, 0, estimationCertainty, 0, 0, 0],
-    [0, 0, 0, estimationCertainty, 0, 0],
-    [0, 0, 0, 0, estimationCertainty, 0],
-    [0, 0, 0, 0, 0, estimationCertainty]
-  ]);
-  var F_k = $M([
-    [1, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0, 1]
-  ]);
-  var Q_k = $M([
-    [systemRotationalVariance, 0, 0, 0, 0, 0],
-    [0, systemRotationalVariance, 0, 0, 0, 0],
-    [0, 0, systemRotationalVariance, 0, 0, 0],
-    [0, 0, 0, systemTranslationalVariance, 0, 0],
-    [0, 0, 0, 0, systemTranslationalVariance, 0],
-    [0, 0, 0, 0, 0, systemTranslationalVariance]
-  ]);
-
-  var KM = new KalmanModel(x_0, P_0, F_k, Q_k);
-  return KM;
-}
-
-/* Returns the the radian value of the specified degrees in the range of (-PI, PI] */
-function degToRad(degrees) {
-    var res = degrees / 180 * Math.PI;
-    return res;
-}
-
-/* Returns the radian value of the specified radians in the range of [0,360), to a precision of four decimal places.*/
-function radToDeg(radians) {
-    var res = radians * 180 / Math.PI;
-    return res;
-}
-
-function createKalmanObservation(pose) {
-  var rotation = pose.bestRotation;
-  var translation = pose.bestTranslation;
-
-  var rotX = -Math.asin(-rotation[1][2]);
-  var rotY = -Math.atan2(rotation[0][2], rotation[2][2]);
-  var rotZ = Math.atan2(rotation[1][0], rotation[1][1]);
-
-  var transX = translation[0];
-  var transY = translation[1];
-  var transZ = translation[2];
-
-  var z_k = $V([rotX, rotY, rotZ, transX, transY, transZ]);
-  var H_k = $M([
-    [1, 0, 0, 0, 0, 0],
-    [0, 1, 0, 0, 0, 0],
-    [0, 0, 1, 0, 0, 0],
-    [0, 0, 0, 1, 0, 0],
-    [0, 0, 0, 0, 1, 0],
-    [0, 0, 0, 0, 0, 1]
-  ]);
-  var R_k = $M([
-    [rotationalVariance, 0, 0, 0, 0, 0],
-    [0, rotationalVariance, 0, 0, 0, 0],
-    [0, 0, rotationalVariance, 0, 0, 0],
-    [0, 0, 0, translationalVariance, 0, 0],
-    [0, 0, 0, 0, translationalVariance, 0],
-    [0, 0, 0, 0, 0, translationalVariance]
-  ]);
-  var KO = new KalmanObservation(z_k, H_k, R_k);
-  return KO;
-}
-
-function updateKalmanModel(observation) {
-  poseFilter.update(observation);
-  var elements = poseFilter.x_k.elements;
-  return elements;
-}
-
-function updateSingleParameterKalmanModel(filter, observation){
-  filter.update(observation);
-  var elements = filter.x_k.elements;
-  return elements;
-}
-
 function onLoad() {
   video = document.getElementById("video");
   canvas = document.getElementById("canvas");
@@ -275,6 +141,14 @@ function onLoad() {
   renderingContext = canvas.getContext("webgl", {
     stencil: true
   });
+  Webcam.set({
+        width: 1280,
+        height: 720,
+        image_format: 'jpeg',
+        jpeg_quality: 90
+      });
+  Webcam.attach("#myCamera")
+  video = document.getElementById("myCamera").childNodes[1];
 
   canvas.width = parseInt(canvas.style.width);
   canvas.height = parseInt(canvas.style.height);
@@ -297,24 +171,11 @@ function onLoad() {
 };
 
 function init() {
-  navigator.getUserMedia({
-      video: true
-    },
-    function(stream) {
-      if (window.webkitURL) {
-        video.src = window.webkitURL.createObjectURL(stream);
-      } else if (video.mozSrcObject !== undefined) {
-        video.mozSrcObject = stream;
-      } else {
-        video.src = stream;
-      }
-    },
-    function(error) {}
-  );
 
   detector = new AR.Detector();
   posit = new POS.Posit(markSize, canvas.width);
   positSmall = new POS.Posit(markSize/2, canvas.width);
+  poseFilter = new PoseFilter();
 
   createRenderers();
   createScenes();
@@ -350,8 +211,11 @@ function tick() {
 };
 
 function snapshot() {
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+   Webcam.snap( function(data_uri){
+    pixelUtil.fetchImageData(data_uri).then(function(data){
+      imageData = data;
+    });
+  });
 };
 
 function createRenderers() {
@@ -454,7 +318,7 @@ function createTexture() {
   var texture = new THREE.Texture(video);
   texture.minFilter = THREE.LinearFilter;
   var object = new THREE.Object3D();
-  var geometry = new THREE.PlaneBufferGeometry(1.0, 1.0, 0.0);
+  var geometry = new THREE.PlaneGeometry(1.0, 1.0, 0.0);
   var material = new THREE.MeshBasicMaterial({
     map: texture,
     depthTest: false,
@@ -718,7 +582,7 @@ function updateScenes(markers) {
   var poses = [];
 
   if (markers.length > 0) {
-    for (var i =0 ;i < markers.length; i ++){
+    for (var i =0 ;i < 1; i ++){
       corners = markers[i].corners;
 
       for (j = 0; j < corners.length; j++) {
@@ -750,87 +614,26 @@ function updateScenes(markers) {
 
     if (!hasTarget) {
       hasTarget = true;
-      poseFilter = createKalmanFilter(pose);
       var rotParams = getRotationParams(pose.bestRotation);
-      rotXFilter = createSingleParameterFilter(rotParams[0], 0, systemRotationalVariance);
-      rotYFilter = createSingleParameterFilter(rotParams[1], 0, systemRotationalVariance);
-      rotZFilter = createSingleParameterFilter(rotParams[2], 0, systemRotationalVariance);
-      transXFilter = createSingleParameterFilter(pose.bestTranslation[0], 0, systemTranslationalVariance);
-      transYFilter = createSingleParameterFilter(pose.bestTranslation[1], 0, systemTranslationalVariance);
-      transZFilter = createSingleParameterFilter(pose.bestTranslation[2], 0, systemTranslationalVariance);
+      poseFilter.initializePositionFilters(pose.bestTranslation);
+      poseFilter.initializeRotationFilters(rotParams);
+      
     }
   } else {
-    if (hasTarget){
-      hasTarget = false;
-      pose = lastPose;
-    } 
+    hasTarget = false;
   }
-
+  
   if (pose != null){
-    var obs = createKalmanObservation(pose);
-    var filtered = updateKalmanModel(obs);
     var rotParams = getRotationParams(pose.bestRotation);
-    var rotXVel;
-    var rotYVel;
-    var rotZVel;
-    var transXVel;
-    var transYVel;
-    var transZVel;
 
-    if (lastPose == null){
-      rotXVel = 0;
-      rotYVel = 0;
-      rotZVel = 0;
-      transXVel = 0;
-      transYVel = 0;
-      transZVel = 0;
-    } else {
-      rotXVel = rotParams[0] - lastRotation[0];
-      rotYVel = rotParams[1] - lastRotation[1];
-      rotZVel = rotParams[2] - lastRotation[2];
-      transXVel = pose.bestTranslation[0] - lastPosition[0];
-      transYVel = pose.bestTranslation[1] - lastPosition[1];
-      transZVel = pose.bestTranslation[2] - lastPosition[2];
-    }
-
-    var rotParams = fixRotation(rotParams, lastRotation);
-
-    var rotXObs = createSingleParameterObservation(rotParams[0], rotXVel, rotationalVariance);
-    var rotXFiltered = updateSingleParameterKalmanModel(rotXFilter, rotXObs);
-
-    var rotYObs = createSingleParameterObservation(rotParams[1], rotYVel, rotationalVariance);
-    var rotYFiltered = updateSingleParameterKalmanModel(rotYFilter, rotYObs);
-
-    var rotZObs = createSingleParameterObservation(rotParams[2], rotZVel, rotationalVariance);
-    var rotZFiltered = updateSingleParameterKalmanModel(rotZFilter, rotZObs);
-
-    var transXObs = createSingleParameterObservation(pose.bestTranslation[0], transXVel, translationalVariance);
-    var transXFiltered = updateSingleParameterKalmanModel(transXFilter, transXObs);
-
-    var transYObs = createSingleParameterObservation(pose.bestTranslation[1], transYVel, translationalVariance);
-    var transYFiltered = updateSingleParameterKalmanModel(transYFilter, transYObs);
-
-    var transZObs = createSingleParameterObservation(pose.bestTranslation[2], transZVel, translationalVariance);
-    var transZFiltered = updateSingleParameterKalmanModel(transZFilter, transZObs);
-
-    var rot = [obs.z_k.elements[0], obs.z_k.elements[1], obs.z_k.elements[2]];
-    //var filteredRot = [filtered[0], filtered[1], filtered[2]];
-    var filteredRot = [rotXFiltered[0], rotYFiltered[0], rotZFiltered[0]];
-
-    var rotDiff = [rot[0] - filteredRot[0], rot[1] - filteredRot[1], rot[2] - filteredRot[2]];
-    //var filteredTrans = [filtered[3], filtered[4], filtered[5]];
-    var filteredTrans = [transXFiltered[0], transYFiltered[0], transZFiltered[0]];
-
-    lastPose = pose; 
-    lastRotation = filteredRot;
-    lastPosition = filteredTrans;
-    //console.log(filteredTrans);
-
-    updateObject(model, filteredRot, filteredTrans);
+    poseFilter.updatePositions(pose.bestTranslation);
+    poseFilter.updateRotations(rotParams);
+   
+    updateObject(model, poseFilter.getLastRotation(), poseFilter.getLastPosition());
     updatePose("pose1", pose.bestError, pose.bestRotation, pose.bestTranslation);
     updatePose("pose2", pose.alternativeError, pose.alternativeRotation, pose.alternativeTranslation);
-    var d = document.getElementById("filter");
-    d.innerHTML = " filtered: " + Math.round(filteredRot[0] * 180.0 / Math.PI) + ", " + Math.round(filteredRot[1] * 180.0 / Math.PI) + ", " + Math.round(filteredRot[2] * 180.0 / Math.PI) + "<br/>" + " diff: " + Math.round(rotDiff[0] * 180.0 / Math.PI) + ", " + Math.round(rotDiff[1] * 180.0 / Math.PI) + ", " + Math.round(rotDiff[2] * 180.0 / Math.PI);
+    //var d = document.getElementById("filter");
+    //d.innerHTML = " filtered: " + Math.round(filteredRot[0] * 180.0 / Math.PI) + ", " + Math.round(filteredRot[1] * 180.0 / Math.PI) + ", " + Math.round(filteredRot[2] * 180.0 / Math.PI) + "<br/>" + " diff: " + Math.round(rotDiff[0] * 180.0 / Math.PI) + ", " + Math.round(rotDiff[1] * 180.0 / Math.PI) + ", " + Math.round(rotDiff[2] * 180.0 / Math.PI);
   }
     updateMaterial();
   //step += 0.005;

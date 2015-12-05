@@ -21,6 +21,10 @@
   <script type="text/javascript" src="./libs/stlUtils.js"></script>
   <script type="text/javascript" src="./libs/sylvester.js"></script> 
   <script type="text/javascript" src="./libs/kalman.js"></script>
+  <script type="text/javascript" src="./libs/geometryUtils.js"></script>
+  <script type="text/javascript" src="./poseFilter.js"></script>
+  <script type="text/javascript" src="./libs/pixel-util.min.js"></script>
+  <script type="text/javascript" src="./libs/webcam.min.js"></script>
 
   <script type="text/javascript" src="./demo.js"></script>
 
@@ -36,7 +40,7 @@
 
 <body style="text-align: center;">
 
-  <video id="video" autoplay="true" style="display:none;"></video>
+  <div id="myCamera" autoplay="true"style="display:none;"></div>
   
   <div id="main_window" class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
               mdl-layout--overlay-drawer-button ">
@@ -64,8 +68,8 @@
     </div>
     <main class="mdl-layout__content">
       <div id="view_container" class="page-content">
-        <canvas id="canvas" style="margin-left:auto; width: 640px; height: 480px; float: left; border: solid 1px black; display: none;"></canvas>
-        <div id="container" style="margin-left:auto; width: 640px; height: 480px; float: left; border: solid 1px black; background: green;"></div>
+        <canvas id="canvas" style="margin-left:auto; width: 1280px; height: 720px; float: left; border: solid 1px black; display: none;"></canvas>
+        <div id="container" style="margin-left:auto; width: 1280px; height: 720px; float: left; border: solid 1px black; background: green;"></div>
         <div style="clear: both;"></div>
         <div style="display: none;">
           <div style="float: left; border: solid 1px black;">
