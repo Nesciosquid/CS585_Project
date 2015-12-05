@@ -198,23 +198,32 @@ function tick() {
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
     snapshot();
 
-    var markers = detector.detect(imageData);
-    updateScenes(markers);
+    if (imageData){
+        var markers = detector.detect(imageData);
+        updateScenes(markers);
 
-    shaderTime +=.1;
+        shaderTime +=.1;
 
-    filmPass.uniforms[ "time" ].value = shaderTime;
-    badTVPass.uniforms[ "time" ].value = shaderTime;
+        filmPass.uniforms[ "time" ].value = shaderTime;
+        badTVPass.uniforms[ "time" ].value = shaderTime;
 
-    render();
+        render();
+    }
   }
 };
 
 function snapshot() {
    Webcam.snap( function(data_uri){
+    console.log(data_uri);
+    
     pixelUtil.fetchImageData(data_uri).then(function(data){
       imageData = data;
     });
+/*
+    pixelUtil.fetchImageData("../sample_photos/IMG_4115.JPG").then(function(data){
+      imageData = data;
+    });
+    */
   });
 };
 
