@@ -41,13 +41,15 @@ var lastRotation = [0,0,0];
 
 var filmPass;
 var filmPassStaticIntensity = .4;
-var filmPassLineIntensity = .75;
+var filmPassLineIntensity = .5;
 var badTVPass;
 var badTVPassSpeed = .025;
 var badTVPassSpeedMax = .05;
 var badTVPassMinDistortion = 1.5;
 var badTVPassMaxDistortion = 10;
 var shaderTime = 0;
+
+var tracker;
 
 var markSize = 33.0; //millimeters
 /*
@@ -67,7 +69,9 @@ var markerPositions = {
                         1: [-30.25,13.75,0],
                         2: [-30.25, -13.75,0],
                         3: [30.25, 13.75,0],
-                        4: [30.25, -13.75, 0]
+                        4: [30.25, -13.75, 0],
+                        5: [23.375,0,0],
+                        6: [-19.25,0,0]
                         };
 
 var smallMarks = {
@@ -77,7 +81,7 @@ var smallMarks = {
   4: true
 }
                         
-var markerSizes = {0: markSize, 1: markSize/2, 2: markSize/2, 3: markSize/2, 4: markSize/2};
+var markerSizes = {0: markSize, 1: markSize/2, 2: markSize/2, 3: markSize/2, 4: markSize/2, 5: 35.75, 6: 44};
 
 var poseFilter;
 var rotXFilter;
@@ -170,13 +174,25 @@ function onLoad() {
   currentHeight = 50;
 };
 
+function setupTracker(){
+  tracker = new MarkerTracker(canvas.width);
+  tracker.createMarker(0, 33, [0,0,0], [0,0,0]);
+  tracker.createMarker(1, 33/2, [-30.25, 13.75, 0], [0,0,0]);
+  tracker.createMarker(2, 33/2, [-30.25, -13.75, 0], [0,0,0]);
+  tracker.createMarker(3, 33/2, [-30.25, -13.75, 0], [0,0,0]);
+  tracker.createMarker(4, 33/2, [-30.25, -13.75, 0], [0,0,0]);
+  tracker.createMarker(5, 35.75, [23.375, 0, 0], [0,0,0]);
+  tracker.createMarker(6, 44, [-19.25, 0, 0], [0,0,0]);
+
+}
+
 function init() {
 
   detector = new AR.Detector();
   posit = new POS.Posit(markSize, canvas.width);
   positSmall = new POS.Posit(markSize/2, canvas.width);
   poseFilter = new PoseFilter();
-
+  setupTracker();
   createRenderers();
   createScenes();
 
@@ -200,6 +216,7 @@ function tick() {
 
     if (imageData){
         var markers = detector.detect(imageData);
+        tracker.findMarkers(imageData);
         updateScenes(markers);
 
         shaderTime +=.1;
@@ -214,7 +231,7 @@ function tick() {
 
 function snapshot() {
    Webcam.snap( function(data_uri){
-    console.log(data_uri);
+    //console.log(data_uri);
     
     pixelUtil.fetchImageData(data_uri).then(function(data){
       imageData = data;
@@ -233,7 +250,7 @@ function createRenderers() {
     antialiasing: true,
     stencil: true
   });
-  renderer3.setClearColor(0xffffff, 1);
+  renderer3.setClearColor(0xFFFFFF);
   renderer3.setSize(canvas.width, canvas.height);
 
   document.getElementById("container").appendChild(renderer3.domElement);
@@ -265,8 +282,8 @@ function createRenderers() {
   var rtParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: true };
 
   bgComposer = new THREE.EffectComposer(renderer3, new THREE.WebGLRenderTarget(canvas.width * 2, canvas.height * 2, rtParameters ));
-  modelComposer = new THREE.EffectComposer(renderer3);
-  maskComposer = new THREE.EffectComposer(renderer3);
+  modelComposer = new THREE.EffectComposer(renderer3, new THREE.WebGLRenderTarget(canvas.width * 2, canvas.height * 2, rtParameters ));
+  sceneComposer = new THREE.EffectComposer(renderer3, new THREE.WebGLRenderTarget(canvas.width * 2, canvas.height * 2, rtParameters ));
 
   var renderVideoPass = new THREE.RenderPass(scene3, camera3);
   renderVideoPass.clear = true;
@@ -294,7 +311,38 @@ function createRenderers() {
   badTVPass.uniforms[ "speed" ].value = badTVPassSpeed;
   badTVPass.uniforms[ "rollSpeed" ].value = 0;
 
+  scrollPass = new THREE.ShaderPass(THREE.BadTVShader);
+  scrollPass.uniforms[ "tDiffuse" ].value = null;
+  scrollPass.uniforms[ "time" ].value =  0.1;
+  scrollPass.uniforms[ "distortion" ].value = 0;
+  scrollPass.uniforms[ "distortion2" ].value = 0;
+  scrollPass.uniforms[ "speed" ].value = 0;
+  scrollPass.uniforms[ "rollSpeed" ].value = .2;
+
+  renderScene = new THREE.TexturePass(bgComposer.renderTarget2);
+  renderModel = new THREE.TexturePass(modelComposer.renderTarget2);
+
   //bgComposer.addPass(maskPass);
+  //bgComposer.addPass(renderVideoPass);
+  //bgComposer.addPass(copyPass);
+  //bgComposer.addPass(copyPass);
+  //bgComposer.addPass(filmPass);
+  //bgComposer.addPass(renderModelPass);
+
+  //bgComposer.addPass(copyPass);
+
+  //modelComposer.addPass(renderModelPass);
+ // modelComposer.addPass(copyPass);
+
+  //sceneComposer.addPass(renderScene);
+  //sceneComposer.addPass(renderModel);
+  //sceneComposer.addPass(copyPass);
+
+  //modelComposer.addPass(filmPass);
+  //modelComposer.addPass(scrollPass);
+  //modelComposer.addPass(renderModelPass);
+  //modelComposer.addPass(copyPass);
+
   bgComposer.addPass(renderVideoPass);
   bgComposer.addPass(renderModelPass);
   bgComposer.addPass(maskPass);
@@ -302,14 +350,17 @@ function createRenderers() {
   bgComposer.addPass(badTVPass);
   bgComposer.addPass(clearMaskPass);
   bgComposer.addPass(copyPass);
+  
 
 };
 
 function render() {
   renderer3.autoClear = false;
   //renderer3.render(scene3, camera3);
-  bgComposer.render();
+  //bgComposer.render();
+  //amodelComposer.render();
   //renderer3.render(scene4, camera4);
+  bgComposer.render();
 };
 
 function createScenes() {
@@ -435,10 +486,10 @@ function setupHologramMesh(mesh) {
 
   var heightOffset = 0;
   if(loadedGeometry){
-    console.log(loadedGeometry.boundingBox);
+    //console.log(loadedGeometry.boundingBox);
     heightOffset = loadedGeometry.boundingBox.min.z * currentScale;
   }
-  console.log(heightOffset);
+  //console.log(heightOffset);
   mesh.position.set(0, 0, 0);
   mesh.position.set(-1 / 7, 0, -heightOffset + currentHeight);
 }
@@ -609,10 +660,7 @@ function updateScenes(markers) {
         var pos = markerPositions[id];
       }
 
-      var poseMaker;
-      if (smallMarks.hasOwnProperty(id)){
-        poseMaker = positSmall;
-      }  else poseMaker = posit;
+      var poseMaker = new POS.Posit(markerSizes[id], canvas.width);
       var markPose = poseMaker.pose(corners, size, [pos[0], pos[1], pos[2]]);
       poses.push([markers[i].id, markPose]);
     }
@@ -635,8 +683,13 @@ function updateScenes(markers) {
   if (pose != null){
     var rotParams = getRotationParams(pose.bestRotation);
 
+    var averageData = getMarkerAverage(tracker.getAllMarkerData());
+    console.log(averageData);
+
     poseFilter.updatePositions(pose.bestTranslation);
     poseFilter.updateRotations(rotParams);
+
+    console.log(pose.bestTranslation);
    
     updateObject(model, poseFilter.getLastRotation(), poseFilter.getLastPosition());
     updatePose("pose1", pose.bestError, pose.bestRotation, pose.bestTranslation);

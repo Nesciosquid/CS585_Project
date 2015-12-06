@@ -1,0 +1,3 @@
+var HologramRenderer = function(webcam){
+
+}
