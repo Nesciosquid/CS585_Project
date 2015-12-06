@@ -49,7 +49,7 @@
   <div id="myCamera" autoplay="true"style="display:none;"></div>
   
   <div id="main_window" class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
-              mdl-layout--overlay-drawer-button ">
+              mdl-layout--overlay-drawer-button color-primary">
     <div id="button_drawer" class="mdl-layout__drawer">
       <h4>Holographic STL Viewer</h4><br><br>
       <center>Drag an STL file into the viewing window to load it.</center><br>
@@ -73,8 +73,8 @@
       </nav>
     </div>
     <main class="mdl-layout__content">
-      <div id="view_container" class="page-content">
-        <canvas id="canvas" style="margin-left:auto; width: 1280px; height: 720px; float: left; border: solid 1px black; display: none;"></canvas>
+      <div id="view_container" style="height: 100%; width: 100%; background: #000000;" class="page-content">
+        <canvas id="canvas" style=" margin-left:auto; width: 1280px; height: 720px; float: left; border: solid 1px black; display: none;"></canvas>
         <div id="container" style="margin-left:auto; width: 1280px; height: 720px; float: left; border: solid 1px black; background: green;"></div>
         <div style="clear: both;"></div>
         <div style="display: none;">

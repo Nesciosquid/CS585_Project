@@ -5,21 +5,22 @@ var Marker = function(id, size, position, rotation){
 	this.rotation = rotation;
 
 	this.getWorldPosition = function(pose){
-		console.log(pose.bestTranslation);
-		var rotation = getRotationParams(pose.bestRotation);
+		var params = getRotationParams(pose.bestRotation);
 		var trans = pose.bestTranslation;
-		var transVec = new THREE.Vector3();
-		transVec.fromArray(trans);
+		var transVec = new THREE.Vector3(trans[0], trans[1], trans[2]);
 		var pivot = new THREE.Object3D();
-		var origin = new THREE.Object3D();
-		pivot.position.fromArray(this.position);
-		origin.add(pivot);
-		origin.rotation.fromArray(rotation);
-		origin.updateMatrixWorld();
+		var ori = new THREE.Object3D();
+		var offset = [0,0,0];
+		offset = this.position;
+		pivot.position.set(offset[0], offset[1], offset[2]);
+		ori.add(pivot);
+		ori.rotation.set(params[0], params[1], params[2]);
+		ori.updateMatrixWorld();
 		var vec = new THREE.Vector3();
 		vec.setFromMatrixPosition(pivot.matrixWorld);
 		transVec.sub(vec);
-		return transVec.toArray();
+
+  		return transVec.toArray();
 	}
 
 	this.getWorldRotation = function(pose){
@@ -38,7 +39,6 @@ var getMarkerAverage = function(allMarkerData){
 	var averageRotation = new THREE.Vector3(0,0,0);
 	var averagePosition = new THREE.Vector3(0,0,0);
 	for (var i =0 ;i < allMarkerData.length; i++){
-		//console.log(allMarkerData);
 		var markerData = allMarkerData[i];
 		var pos = markerData.position;
 		var rot = markerData.rotation;
@@ -52,22 +52,22 @@ var getMarkerAverage = function(allMarkerData){
 		averageRotation.add(rotVec);
 		averageRotation.multiplyScalar(1/(i+1));
 
-
-		//console.log(averagePosition);
 		averagePosition.multiplyScalar(i);
 		averagePosition.add(posVec);
 		averagePosition.multiplyScalar(1 / (i + 1));
 	}
 
 	var averageMarkerData = {
-		position: averagePosition,
-		rotation: averageRotation
+		position: averagePosition.toArray(),
+		rotation: averageRotation.toArray()
 	} 
+
 	return averageMarkerData;
 }
 
-var MarkerTracker = function(canvasWidth){
-	this.canvasWidth = canvasWidth;
+var MarkerTracker = function(width, height){
+	this.width = width;
+	this.height = height;
 	this.markers = {};
 	this.detector = new AR.Detector();
 	this.foundMarks = [];
@@ -106,18 +106,16 @@ var MarkerTracker = function(canvasWidth){
 	this.getMarkerData = function(mark){
 		var id = mark.id;
 		var corners = mark.corners;
-
 		if (!this.markers.hasOwnProperty(id)){
 			this.createMarker(id, this.defaultMarkSize, this.defaultMarkPosition, this.defaultMarkRotation);
 		}
 		var marker = this.markers[id];
-		var poseMaker = new POS.Posit(marker.size, this.canvasWidth);
 		var corners = mark.corners;
 		this.centerCornerLocations(corners);
-		var pose = poseMaker.pose(corners, marker.size, marker.position);
+		var poseMaker = new POS.Posit(marker.size, this.width);
+		var pose = poseMaker.pose(corners);
 		var position = marker.getWorldPosition(pose);
 		var rotation = marker.getWorldRotation(pose);
-
 		var markerData = {
 			id: marker.id,
 			position: position,
@@ -130,8 +128,8 @@ var MarkerTracker = function(canvasWidth){
 	this.centerCornerLocations = function(corners){
 		for (var i in corners){
 			var corner = corners[i];
-			corner.x = corner.x - (this.canvasWidth)/2;
-			corner.y = (this.canvasWidth)/2 - corner.y;
+			corner.x = corner.x - (this.width)/2;
+			corner.y = (this.height)/2 - corner.y;
 		}
 		return corners;
 	}
