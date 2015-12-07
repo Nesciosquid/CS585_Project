@@ -8,10 +8,10 @@ var HologramRenderer = function(hologram, container, video, width, height) {
 	this.filmPassStaticIntensity = .4;
 	this.filmPassLineIntensity = .5;
 
-	this.badTVPassSpeed = .025;
-	this.badTVPassSpeedMax = .05;
-	this.badTVPassMinDistortion = 1.5;
-	this.badTVPassMaxDistortion = 10;
+	this.badTVPassSpeed = .0125;
+	this.badTVPassSpeedMax = .025;
+	this.badTVPassMinDistortion = 1;
+	this.badTVPassMaxDistortion = 5;
 
 	this.scrollPass;
 	this.renderModelPass;

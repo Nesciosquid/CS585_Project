@@ -55,7 +55,7 @@
       <center>Drag an STL file into the viewing window to load it.</center><br>
       <!-- Slider with Starting Value -->
       <h5>Opacity</h5>
-      <input id = "opacitySlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="1" value=".7" tabindex="0" step = ".05" S="hologram.setOpacity(parseFloat(this.value))">
+      <input id = "opacitySlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="1" value=".7" tabindex="0" step = ".05" oninput="hologram.setOpacity(parseFloat(this.value))">
       <h5>Scale</h5>
       <input id = "scaleSlider" class="mdl-slider mdl-js-slider" type="range" min=".25" max="5" value="1" tabindex="1" step = ".25" oninput="hologram.setScale(parseFloat(this.value))">
       <h5>Height</h5>
