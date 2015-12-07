@@ -12,41 +12,41 @@
 
   <title>Holographic STL Viewer</title>
 
-  <script type="text/javascript" src="./libs/Three.js"></script> 
-  <script type="text/javascript" src="./libs/STLLoader.js"></script>
-  <script type="text/javascript" src="./libs/svd.js"></script> 
-  <script type="text/javascript" src="./libs/posit2.js"></script> 
-  <script type="text/javascript" src="./libs/cv.js"></script> 
-  <script type="text/javascript" src="./libs/aruco.js"></script> 
-  <script type="text/javascript" src="./libs/stlUtils.js"></script>
-  <script type="text/javascript" src="./libs/sylvester.js"></script> 
-  <script type="text/javascript" src="./libs/kalman.js"></script>
-  <script type="text/javascript" src="./libs/geometryUtils.js"></script>
-  <script type="text/javascript" src="./libs/pixel-util.min.js"></script>
-  <script type="text/javascript" src="./libs/webcam.min.js"></script>
+  <script type="text/javascript" src="./libs/js-aruco/svd.js"></script> 
+  <script type="text/javascript" src="./libs/js-aruco/posit2.js"></script> 
+  <script type="text/javascript" src="./libs/js-aruco/cv.js"></script> 
+  <script type="text/javascript" src="./libs/js-aruco/aruco.js"></script> 
 
-  <script type="text/javascript" src="./hologram.js"></script>
-  <script type="text/javascript" src="./hologramUtils.js"></script>
-  <script type="text/javascript" src="./hologramFilter.js"></script>
-  <script type="text/javascript" src="./hologramTracker.js"></script>
-  <script type="text/javascript" src="./hologramRenderer.js"></script> 
-  <script type="text/javascript" src="./hologramFilter.js"></script>
+  <script type="text/javascript" src="./libs/kalman/sylvester.js"></script> 
+  <script type="text/javascript" src="./libs/kalman/kalman.js"></script>
+  <script type="text/javascript" src="./libs/webcam/webcam.min.js"></script>
 
-  <script type="text/javascript" src="./libs/EffectComposer.js"></script>
-  <script type="text/javascript" src="./libs/CopyShader.js"></script>
-  <script type="text/javascript" src="./libs/ShaderPass.js"></script>
-  <script type="text/javascript" src="./libs/RenderPass.js"></script>
-  <script type="text/javascript" src="./libs/MaskPass.js"></script>
-  <script type="text/javascript" src="./libs/FilmPass.js"></script>
-  <script type="text/javascript" src="./libs/FilmShader.js"></script>
-  <script type="text/javascript" src="./libs/BadTVShader.js"></script>
-  <script type="text/javascript" src="./libs/TexturePass.js"></script>
+  <script type="text/javascript" src="./libs/three/Three.js"></script> 
+  <script type="text/javascript" src="./libs/three/stlUtils.js"></script>
+  <script type="text/javascript" src="./libs/three/STLLoader.js"></script>
+  <script type="text/javascript" src="./libs/three/EffectComposer.js"></script>
+  <script type="text/javascript" src="./libs/three/CopyShader.js"></script>
+  <script type="text/javascript" src="./libs/three/ShaderPass.js"></script>
+  <script type="text/javascript" src="./libs/three/RenderPass.js"></script>
+  <script type="text/javascript" src="./libs/three/MaskPass.js"></script>
+  <script type="text/javascript" src="./libs/three/FilmPass.js"></script>
+  <script type="text/javascript" src="./libs/three/FilmShader.js"></script>
+  <script type="text/javascript" src="./libs/three/BadTVShader.js"></script>
+  <script type="text/javascript" src="./libs/three/TexturePass.js"></script>
+
+  <script type="text/javascript" src="./src/hologram.js"></script>
+  <script type="text/javascript" src="./src/hologramUtils.js"></script>
+  <script type="text/javascript" src="./src/hologramFilter.js"></script>
+  <script type="text/javascript" src="./src/hologramTracker.js"></script>
+  <script type="text/javascript" src="./src/hologramRenderer.js"></script> 
+  <script type="text/javascript" src="./src/hologramFilter.js"></script>
+  <script type="text/javascript" src="./src/hologramModel.js"></script>
 
 </head>
 
 <body style="text-align: center;">
 
-  <div id="myCamera" autoplay="true"style="display:none;"></div>
+  <div id="myCamera" style="display: none;"></div>
   
   <div id="main_window" class="mdl-layout mdl-js-layout mdl-layout--fixed-drawer
               mdl-layout--overlay-drawer-button color-primary">
@@ -55,27 +55,28 @@
       <center>Drag an STL file into the viewing window to load it.</center><br>
       <!-- Slider with Starting Value -->
       <h5>Opacity</h5>
-      <input id = "opacitySlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="1" value=".7" tabindex="0" step = ".05" oninput="setOpacity(parseFloat(this.value))">
+      <input id = "opacitySlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="1" value=".7" tabindex="0" step = ".05" S="hologram.setOpacity(parseFloat(this.value))">
       <h5>Scale</h5>
-      <input id = "scaleSlider" class="mdl-slider mdl-js-slider" type="range" min=".25" max="5" value="1" tabindex="1" step = ".25" oninput="setScale(parseFloat(this.value))">
+      <input id = "scaleSlider" class="mdl-slider mdl-js-slider" type="range" min=".25" max="5" value="1" tabindex="1" step = ".25" oninput="hologram.setScale(parseFloat(this.value))">
       <h5>Height</h5>
-      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="150" value="50" tabindex="2" step="5" oninput="setHeight(parseFloat(this.value))">
+      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="0" max="150" value="50" tabindex="2" step="5" oninput="hologram.setHeight(parseFloat(this.value))">
       <nav class="mdl-navigation" id="feature-controls">
       <h5>Rotate X</h5>
-      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="-180" max="180" value="0" tabindex="3" step="5" oninput="setXRotation(parseFloat(this.value))">
+      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="-180" max="180" value="0" tabindex="3" step="5" oninput="hologram.setXRotation(parseFloat(this.value))">
       <nav class="mdl-navigation" id="feature-controls">
       <h5>Rotate Y</h5>
-      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="-180" max="180" value="0" tabindex="4" step="5" oninput="setYRotation(parseFloat(this.value))">
+      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="-180" max="180" value="0" tabindex="4" step="5" oninput="hologram.setYRotation(parseFloat(this.value))">
       <nav class="mdl-navigation" id="feature-controls">
       <h5>Rotate Z</h5>
-      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="-180" max="180" value="0" tabindex="5" step="5" oninput="setZRotation(parseFloat(this.value))">
+      <input id = "heightSlider" class="mdl-slider mdl-js-slider" type="range" min="-180" max="180" value="0" tabindex="5" step="5" oninput="hologram.setZRotation(parseFloat(this.value))">
       <nav class="mdl-navigation" id="feature-controls">
       </nav>
     </div>
     <main class="mdl-layout__content">
       <div id="view_container" style="height: 100%; width: 100%; background: #000000;" class="page-content">
-        <canvas id="canvas" style=" margin-left:auto; width: 1280px; height: 720px; float: left; border: solid 1px black; display: none;"></canvas>
-        <div id="container" style="margin-left:auto; width: 1280px; height: 720px; float: left; border: solid 1px black; background: green;"></div>
+        <canvas id="canvas" style=" margin-left:auto; width: 384; height: 216px; float: left; border: solid 1px black; display: none;"></canvas>
+        <div id="container" style="margin-left:auto; width: 100%; height:100%; float: left; border: solid 1px black; background: green;" ></div>
+
         <div style="clear: both;"></div>
         <div style="display: none;">
           <div style="float: left; border: solid 1px black;">

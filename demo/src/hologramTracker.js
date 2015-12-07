@@ -28,13 +28,6 @@ var Marker = function(id, size, position, rotation){
 	}	
 }
 
-var getRotationParams = function(poseRotation) {
-  var rotX = -Math.asin(-poseRotation[1][2]);
-  var rotY = -Math.atan2(poseRotation[0][2], poseRotation[2][2]);
-  var rotZ = Math.atan2(poseRotation[1][0], poseRotation[1][1]);
-  return [rotX, rotY, rotZ];
-}
-
 var getMarkerAverage = function(allMarkerData){
 	var averageRotation = new THREE.Vector3(0,0,0);
 	var averagePosition = new THREE.Vector3(0,0,0);

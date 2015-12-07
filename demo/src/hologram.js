@@ -1,9 +1,9 @@
-var video, canvas, context, imageData, detector, posit, container;
+var video, canvas, context, imageData, detector, posit;
 
 var currentScale = 1.0;
 var currentOpacity = .7;
 var currentHeight = 50;
-var currentRotation = [0, 0, 0];
+var currentRotation = [0,0,0];
 
 var currentColor = 0x81D4FA;
 var missingColor = 0xB39DDB;
@@ -28,35 +28,29 @@ var badTVPassMinDistortion = 1.5;
 var badTVPassMaxDistortion = 10;
 var shaderTime = 0;
 
-var tracker;
+var tracker;                
 var reset = false;
 
 var hasTarget = false;
 var showModel = false;
 
-var hologram;
+var hologram; 
 var holoRenderer;
 
 function onLoad() {
-  video = document.getElementById("video");
+ // video = document.getElementById("video");
   hologram = new HologramModel();
   canvas = document.getElementById("canvas");
   context = canvas.getContext("2d");
-  container = document.getElementById("container");
-
-  var view_container = document.getElementById("view_container");
-  var view_width = view_container.offsetWidth;
-  var view_height = view_container.offsetHeight;
+  var container = document.getElementById("container");
 
   Webcam.set({
-    width: 1280,
-    height: 720,
-    image_format: 'jpeg',
-    jpeg_quality: 90
-  });
+        width: 1280,
+        height: 720,
+        image_format: 'jpeg',
+        jpeg_quality: 90
+      });
   Webcam.attach("#myCamera")
-
-  console.log(Webcam);
 
   video = document.getElementById("myCamera").childNodes[1];
   holoRenderer = new HologramRenderer(hologram, container, video, container.offsetWidth, container.offsetHeight);
@@ -71,22 +65,29 @@ function onLoad() {
   if (navigator.getUserMedia) {
     init();
   }
+
+  /*
+  var opa = document.getElementById("opacitySlider");
+  opa.oninput = function(){
+    setOpacity(parseFloat(opa.value));
+  };
+  */
   currentHeight = 50;
 };
 
-function setupTracker(width, height) {
+function setupTracker(width, height){
   tracker = new MarkerTracker(width, height);
 
   // For five-marker pattern. */
-  tracker.createMarker(0, 33, [0, 0, 0], [0, 0, 0]);
-  tracker.createMarker(1, 33 / 2, [-30.25, 13.75, 0], [0, 0, 0]);
-  tracker.createMarker(2, 33 / 2, [-30.25, -13.75, 0], [0, 0, 0]);
-  tracker.createMarker(3, 33 / 2, [-30.25, -13.75, 0], [0, 0, 0]);
-  tracker.createMarker(4, 33 / 2, [-30.25, -13.75, 0], [0, 0, 0]);
+  tracker.createMarker(0, 33, [0,0,0], [0,0,0]);
+  tracker.createMarker(1, 33/2, [-30.25, 13.75, 0], [0,0,0]);
+  tracker.createMarker(2, 33/2, [-30.25, -13.75, 0], [0,0,0]);
+  tracker.createMarker(3, 33/2, [-30.25, -13.75, 0], [0,0,0]);
+  tracker.createMarker(4, 33/2, [-30.25, -13.75, 0], [0,0,0]);
 
   // For two-marker pattern. */
-  tracker.createMarker(5, 35.75, [23.375, 0, 0], [0, 0, 0]);
-  tracker.createMarker(6, 44, [-19.25, 0, 0], [0, 0, 0]);
+  tracker.createMarker(5, 35.75, [23.375, 0, 0], [0,0,0]);
+  tracker.createMarker(6, 44, [-19.25, 0, 0], [0,0,0]);
 }
 
 function init() {
@@ -94,31 +95,31 @@ function init() {
   detector = new AR.Detector();
   poseFilter = new PoseFilter();
   setupTracker(canvas.width, canvas.height);
+
   requestAnimationFrame(tick);
 };
 
 function tick() {
   requestAnimationFrame(tick);
-  renderer.updateSize()
 
   if (video.readyState === video.HAVE_ENOUGH_DATA) {
     snapshot();
 
-    if (imageData) {
-      var found = tracker.findMarkers(imageData);
-      //updateScenes(markers);
-      updateScenes(found);
+    if (imageData){
+        var found = tracker.findMarkers(imageData);
+        //updateScenes(markers);
+        updateScenes(found);
 
-      //render();
-      this.holoRenderer.render();
+        //render();
+        this.holoRenderer.render();
     }
   }
 };
 
 function snapshot() {
 
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+  context.drawImage(video, 0,0,canvas.width, canvas.height);
+  imageData = context.getImageData(0,0,canvas.width,canvas.height);
   /*
    Webcam.snap( function(data_uri){
     //console.log(data_uri);
@@ -127,16 +128,16 @@ function snapshot() {
       imageData = data;
     });
 */
-  /*
-      pixelUtil.fetchImageData("../sample_photos/IMG_4115.JPG").then(function(data){
-        imageData = data;
-      });
-      */
+/*
+    pixelUtil.fetchImageData("../sample_photos/IMG_4115.JPG").then(function(data){
+      imageData = data;
+    });
+    */
 
   //});
 };
 
-function setMissingState(missing) {
+function setMissingState(missing){
   hologram.setMissingState(missing);
   holoRenderer.setMissingState(missing);
 }
@@ -159,7 +160,7 @@ function updateScenes(found) {
 
   setMissingState(hasTarget);
 
-  if (showModel) {
+  if (showModel){
     hologram.updateObject(poseFilter.getLastRotation(), poseFilter.getLastPosition());
     hologram.updateMaterial();
   }
@@ -167,21 +168,12 @@ function updateScenes(found) {
   holoRenderer.updateVideo();
 };
 
-var loadSTLFromFile = function(buffer) {
-  console.log(this);
-  hologram.loadedGeometry = loadStl(buffer);
-  hologram.loadedGeometry.computeBoundingBox();
-  hologram.setScale(1);
-  hologram.updateModelGeometry();
-}
-
-var onWindowResize = function(event) {
-  console.log("resizing");
-  var container = document.getElementById("view_container");
-  holoRenderer.updateSize(container.offsetWidth, container.offsetHeight);
-}
+  this.loadSTLFromFile = function(buffer) {
+    console.log(this);
+    hologram.loadedGeometry = loadStl(buffer);
+    hologram.loadedGeometry.computeBoundingBox();
+    hologram.setScale(1);
+    hologram.updateModelGeometry();
+  }
 
 window.onload = onLoad;
-document.getElementById("view_container").onresize = function(){
-  console.log("Resized!");
-}
