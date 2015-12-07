@@ -1,51 +1,46 @@
-var HologramRenderer = function(container) {
+var HologramRenderer = function(container, video, width, height) {
 	this.container = container;
+	this.video = video;
+	this.width = width;
+	this.height = height;
+	this.model;
 
-	console.log(this.container);
+	this.currentScale = 1.0;
+	this.currentOpacity = .7;
+	this.currentHeight = 50;
+	this.currentRotation = [0, 0, 0];
 
-	var videoScene, modelScene;
-	var renderer;
-	var videoCamera, modelCamera;
-	var bgComposer;
-	var model;
-	var loadedGeometry;
+	this.currentColor = 0x81D4FA;
+	this.missingColor = 0xB39DDB;
 
-	var lights;
+	this.rotationTime = 30; // seconds
+	this.heightDifference = .2; // of model height
+	this.opacityMissing = .4;
+	this.opacityLocked = .05;
+	this.opacityDifference = opacityLocked;
+	this.opacityMissingCycle = .015;
+	this.opacityLockedCycle = .005;
+	this.opacityCycle = opacityLockedCycle; // lower == slower
+	this.oscillateOpacity = true;
 
-	var currentScale = 1.0;
-	var currentOpacity = .7;
-	var currentHeight = 50;
-	var currentRotation = [0, 0, 0];
+	this.renderVideoPass;
+	this.renderModelPass;
 
-	var currentColor = 0x81D4FA;
-	var missingColor = 0xB39DDB;
+	this.filmPassStaticIntensity = .4;
+	this.filmPassLineIntensity = .5;
 
-	var rotationTime = 30; // seconds
-	var heightDifference = .2; // of model height
-	var opacityMissing = .4;
-	var opacityLocked = .05;
-	var opacityDifference = opacityLocked;
-	var opacityMissingCycle = .015;
-	var opacityLockedCycle = .005;
-	var opacityCycle = opacityLockedCycle; // lower == slower
-	var oscillateOpacity = true;
+	this.badTVPassSpeed = .025;
+	this.badTVPassSpeedMax = .05;
+	this.badTVPassMinDistortion = 1.5;
+	this.badTVPassMaxDistortion = 10;
 
-	var renderVideoPass;
-	var renderModelPass;
+	this.scrollPass;
+	this.renderModelPass;
+	this.renderScenePass;
 
-	var filmPass;
-	var filmPassStaticIntensity = .4;
-	var filmPassLineIntensity = .5;
+	this.hasTarget = false;
 
-	var badTVPass;
-	var badTVPassSpeed = .025;
-	var badTVPassSpeedMax = .05;
-	var badTVPassMinDistortion = 1.5;
-	var badTVPassMaxDistortion = 10;
-
-	var scrollPass;
-	var renderModelPass;
-	var renderScenePass;
+	var targetModel = "./models/owl_35mm.stl";
 
 	this.composerParameters = {
 		minFilter: THREE.LinearFilter,
@@ -54,7 +49,7 @@ var HologramRenderer = function(container) {
 		stencilBuffer: true
 	}
 
-	var hologramMaterial = new THREE.MeshLambertMaterial({
+	this.hologramMaterial = new THREE.MeshLambertMaterial({
 		color: 0x73DCFF,
 		transparent: true,
 		opacity: .8,
@@ -63,36 +58,45 @@ var HologramRenderer = function(container) {
 		emissive: 0x111111
 	});
 
-	var shaderTime = 0;
+	this.shaderTime = 0;
 
-	function setXRotation(angle) {
+	this.setXRotation = function(angle) {
 		this.currentRotation[0] = degToRad(angle);
 		this.updateRotation();
 	}
 
-	function setYRotation(angle) {
+	this.setYRotation = function(angle) {
 		this.currentRotation[1] = degToRad(angle);
 		this.updateRotation();
 	}
 
-	function setZRotation(angle) {
+	this.setZRotation = function(angle) {
 		this.currentRotation[2] = degToRad(angle);
 		this.updateRotation();
 	}
 
-	function setRotation(rotation) {
+	this.setRotation = function(rotation) {
 		this.currentRotation = rotation;
 		this.updateRotation();
 	}
 
-	function setupScenes() {
+	this.setupModels = function() {
+		this.model = this.createModel();
+		this.videoPlane = this.createVideoPlane();
+		this.modelScene.add(this.model);
+		this.videoScene.add(this.videoPlane);
+	}
+
+	this.setupScenes = function() {
 		this.videoScene = new THREE.Scene();
 		this.videoCamera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5);
-		this.videoScene.add(videoCamera);
+		this.videoScene.add(this.videoCamera);
 
 		this.modelScene = new THREE.Scene();
-		this.modelCamera = new THREE.PerspectiveCamera(40, canvas.width / canvas.height, 1, 1000);
-		this.modelScene.add(modelCamera);
+		this.modelCamera = new THREE.PerspectiveCamera(40, this.width / this.height, 1, 1000);
+		this.modelScene.add(this.modelCamera);
+
+		this.lights = [];
 
 		this.lights[0] = new THREE.PointLight(0x888888, 1, 0);
 		this.lights[1] = new THREE.PointLight(0x888888, 1, 0);
@@ -102,29 +106,29 @@ var HologramRenderer = function(container) {
 		this.lights[1].position.set(100, 200, 100);
 		this.lights[2].position.set(-100, -200, -100);
 
-		this.modelScene.add(lights[0]);
-		this.modelScene.add(lights[1]);
-		this.modelScene.add(lights[2]);
+		this.modelScene.add(this.lights[0]);
+		this.modelScene.add(this.lights[1]);
+		this.modelScene.add(this.lights[2]);
 	}
 
-	function updateRotation() {
+	this.updateRotation = function() {
 		this.setupModelMesh();
 	}
 
-	function setupEffects() {
-		this.renderVideoPass = new THREE.RenderPass(scene3, camera3);
-		this.renderVideoPass.clear = false;
+	this.setupEffects = function() {
+		this.renderVideoPass = new THREE.RenderPass(this.videoScene, this.videoCamera);
+		this.renderVideoPass.clear = true;
 
-		this.renderModelPass = new THREE.RenderPass(scene4, camera4);
+		this.renderModelPass = new THREE.RenderPass(this.modelScene, this.modelCamera);
 		this.renderModelPass.clear = false;
 
-		this.maskPass = new THREE.MaskPass(scene4, camera4);
+		this.maskPass = new THREE.MaskPass(this.modelScene, this.modelCamera);
 		this.clearMaskPass = new THREE.ClearMaskPass();
 
 		this.filmPass = new THREE.FilmPass();
 		this.filmPass.uniforms["sCount"].value = 600;
-		this.filmPass.uniforms["sIntensity"].value = filmPassLineIntensity;
-		this.filmPass.uniforms["nIntensity"].value = filmPassStaticIntensity;
+		this.filmPass.uniforms["sIntensity"].value = this.filmPassLineIntensity;
+		this.filmPass.uniforms["nIntensity"].value = this.filmPassStaticIntensity;
 		this.filmPass.uniforms["grayscale"].value = false;
 
 		this.copyPass = new THREE.ShaderPass(THREE.CopyShader);
@@ -134,8 +138,8 @@ var HologramRenderer = function(container) {
 		this.badTVPass.uniforms["tDiffuse"].value = null;
 		this.badTVPass.uniforms["time"].value = 0.1;
 		this.badTVPass.uniforms["distortion"].value = 0.1;
-		this.badTVPass.uniforms["distortion2"].value = badTVPassMinDistortion;
-		this.badTVPass.uniforms["speed"].value = badTVPassSpeed;
+		this.badTVPass.uniforms["distortion2"].value = this.badTVPassMinDistortion;
+		this.badTVPass.uniforms["speed"].value = this.badTVPassSpeed;
 		this.badTVPass.uniforms["rollSpeed"].value = 0;
 
 		this.scrollPass = new THREE.ShaderPass(THREE.BadTVShader);
@@ -145,45 +149,59 @@ var HologramRenderer = function(container) {
 		this.scrollPass.uniforms["distortion2"].value = 0;
 		this.scrollPass.uniforms["speed"].value = 0;
 		this.scrollPass.uniforms["rollSpeed"].value = .2;
-
-		this.renderScene = new THREE.TexturePass(bgComposer.renderTarget2);
-		this.renderModel = new THREE.TexturePass(modelComposer.renderTarget2);
 	}
 
-	function render() {
-		this.renderer.clear();
+	this.render = function() {
+		this.renderer.autoClear = false;
+		//this.renderer.render(this.videoScene, this.videoCamera);
+		//this.renderer.render(this.modelScene, this.modelCamera);
+
 		this.bgComposer.render();
+
+		this.shaderTime += .1;
+
+		this.filmPass.uniforms["time"].value = this.shaderTime;
+		this.badTVPass.uniforms["time"].value = this.shaderTime;
 	}
 
-	function setupRenderer() {
+	this.setupRenderer = function() {
 		this.renderer = new THREE.WebGLRenderer();
 		this.renderer.autoClear = false;
 		this.renderer.setClearColor(0xFFFFFF);
 		this.container.appendChild(this.renderer.domElement);
+		this.renderer.setSize(this.width, this.height);
 	}
 
-	function setup() {
-		this.setupComposers();
+	this.updateVideo = function(){
+		this.videoPlane.children[0].material.map.needsUpdate = true;
+	}
+
+	this.setup = function() {
+		this.setupRenderer();
+		this.setupScenes();
 		this.setupEffects();
+		this.setupModels();
+		this.setupComposers();
 	}
 
-	function createNewComposer(rendererTarget) {
-		return new THREE.EffectComposer(rendererTarget, new THREE.WebGLRenderTarget(canvas.width * 2, canvas.height * 2, this.composerParameters));
+	this.createNewComposer = function() {
+		return new THREE.EffectComposer(this.renderer, new THREE.WebGLRenderTarget(this.width * 2, this.height * 2, this.composerParameters));
 	}
 
-	function setupComposers() {
-		this.bgComposer = createNewComposer(this.container);
-		this.bgComposer.addPass(renderVideoPass);
-		this.bgComposer.addPass(renderModelPass);
-		this.bgComposer.addPass(maskPass);
-		this.bgComposer.addPass(filmPass);
-		this.bgComposer.addPass(badTVPass);
-		this.bgComposer.addPass(clearMaskPass);
-		this.bgComposer.addPass(copyPass);
+	this.setupComposers = function() {
+		this.bgComposer = this.createNewComposer();
+		this.bgComposer.addPass(this.renderVideoPass);
+		this.bgComposer.addPass(this.renderModelPass);
+		this.bgComposer.addPass(this.maskPass);
+		this.bgComposer.addPass(this.filmPass);
+		this.bgComposer.addPass(this.badTVPass);
+		this.bgComposer.addPass(this.clearMaskPass);
+		this.bgComposer.addPass(this.copyPass);
 	}
 
-	function createVideoPlane() {
-		var texture = new THREE.Texture(video);
+	this.createVideoPlane = function() {
+		var texture = new THREE.Texture(this.video);
+		console.log(texture);
 		texture.minFilter = THREE.LinearFilter;
 		var object = new THREE.Object3D();
 		var geometry = new THREE.PlaneBufferGeometry(1.0, 1.0, 0.0);
@@ -201,24 +219,38 @@ var HologramRenderer = function(container) {
 		return object;
 	};
 
-	function setupModelMesh() {
-		if (model != null) {
+	this.setupHologramMesh = function(mesh) {
+		mesh.scale.set(1, 1, 1);
+		mesh.position.set(0, 0, 0);
+		mesh.rotation.set(this.currentRotation[0], this.currentRotation[1], this.currentRotation[2]);
+		mesh.scale.multiplyScalar(this.currentScale);
+
+		var heightOffset = 0;
+		if (this.loadedGeometry) {
+			heightOffset = this.loadedGeometry.boundingBox.min.z * this.currentScale;
+		}
+		mesh.position.set(0, 0, 0);
+		mesh.position.set(-1 / 7, 0, -heightOffset + this.currentHeight);
+	}
+
+	this.setupModelMesh = function() {
+		if (this.model != null) {
 			this.setupHologramMesh(this.model.children[0]);
 		}
 	}
 
-	function setHeight(height) {
+	this.setHeight = function(height) {
 		if (height > 0) {
 			this.currentHeight = height;
 			this.updateHeight();
 		}
 	}
 
-	function updateHeight() {
+	this.updateHeight = function() {
 		this.setupModelMesh();
 	}
 
-	function setScale(scale) {
+	this.setScale = function(scale) {
 		if (scale > 0) {
 			this.currentScale = scale;
 			this.updateScale();
@@ -227,16 +259,16 @@ var HologramRenderer = function(container) {
 		}
 	}
 
-	function updateScale() {
+	this.updateScale = function() {
 		this.setupModelMesh();
 	}
 
-	function updateMaterial() {
+	this.updateMaterial = function() {
 		this.updateOpacity();
 		this.updateColor();
 	}
 
-	function updateColor() {
+	this.updateColor = function() {
 		if (hasTarget) {
 			this.hologramMaterial.color.setHex(currentColor);
 		} else {
@@ -244,7 +276,7 @@ var HologramRenderer = function(container) {
 		}
 	}
 
-	function updateOpacity() {
+	this.updateOpacity = function() {
 		if (this.hasTarget) {
 			this.badTVPass.uniforms["distortion2"].value = this.badTVPassMinDistortion;
 			this.badTVPass.uniforms["speed"].value = this.badTVPassSpeed;
@@ -277,7 +309,7 @@ var HologramRenderer = function(container) {
 		}
 	}
 
-	function setOpacity(opacity) {
+	this.setOpacity = function(opacity) {
 		if (opacity >= 0 && opacity <= 1) {
 			this.currentOpacity = opacity;
 			updateOpacity();
@@ -286,32 +318,17 @@ var HologramRenderer = function(container) {
 		}
 	}
 
-	function setupHologramMesh(mesh) {
-		mesh.scale.set(1, 1, 1);
-		mesh.position.set(0, 0, 0);
-		mesh.rotation.set(this.currentRotation[0], this.currentRotation[1], this.currentRotation[2]);
-		mesh.scale.multiplyScalar(this.currentScale);
 
-		var heightOffset = 0;
-		if (this.loadedGeometry) {
-			//console.log(loadedGeometry.boundingBox);
-			heightOffset = this.loadedGeometry.boundingBox.min.z * this.currentScale;
-		}
-		//console.log(heightOffset);
-		mesh.position.set(0, 0, 0);
-		mesh.position.set(-1 / 7, 0, -heightOffset + this.currentHeight);
-	}
-
-	function updateModelGeometry() {
-		var newObject = createModelFromGeometry(this.loadedGeometry);
-		this.modelScene.remove(model);
+	this.updateModelGeometry = function() {
+		var newObject = this.createModelFromGeometry(this.loadedGeometry);
+		this.modelScene.remove(this.model);
 		this.model = newObject;
 		this.model.matrixWorldNeedsUpdate = true;
-		this.modelScene.add(model);
+		this.modelScene.add(this.model);
 		reset = true;
 	}
 
-	function createDebugObject() {
+	this.createDebugObject = function() {
 		var object = new THREE.Object3D(),
 			geometry = new THREE.PlaneGeometry(1.0, 1.0, 0.0),
 			material = new THREE.MeshNormalMaterial(),
@@ -322,49 +339,51 @@ var HologramRenderer = function(container) {
 		return object;
 	}
 
-	function createModelFromGeometry() {
+	this.createModelFromGeometry = function() {
 		var object = new THREE.Object3D();
 
 		var mesh = new THREE.Mesh(this.loadedGeometry, this.hologramMaterial);
-		setupHologramMesh(mesh);
+		this.setupHologramMesh(mesh);
 
 		object.add(mesh);
 		return object;
 	}
 
-	function createModel() {
+	this.createModel = function() {
 		var loader = new THREE.STLLoader();
 		var object = new THREE.Object3D();
 		var geo;
+		var holo = this;
 		loader.load(targetModel, function(geometry) {
-
-			var mesh = new THREE.Mesh(geometry, this.hologramMaterial);
-			setupHologramMesh(mesh);
+			console.log(geometry);
+			var mesh = new THREE.Mesh(geometry, holo.hologramMaterial);
+			holo.setupHologramMesh(mesh);
 			object.add(mesh);
 		});
 		return object;
 	}
 
-	function clearDebugObjects() {
+	this.clearDebugObjects = function() {
 		for (var id in debugObjects) {
 			var object = this.debugObjects[id];
 			this.modelScene.remove(object);
 		}
 	}
 
-	function createDebugObjects(poses) {
-		clearDebugObjects();
+	this.createDebugObjects = function(poses) {
+		this.clearDebugObjects();
 		//TODO: Fix this
 	}
 
-	function updateObject(object, rotation, translation) {
-		object.rotation.x = rotation[0];
-		object.rotation.y = rotation[1];
-		object.rotation.z = rotation[2];
+	this.updateObject = function(rotation, translation) {
+		this.model.rotation.x = rotation[0];
+		this.model.rotation.y = rotation[1];
+		this.model.rotation.z = rotation[2];
 
-		object.position.x = translation[0];
-		object.position.y = translation[1];
-		object.position.z = -translation[2];
+		this.model.position.x = translation[0];
+		this.model.position.y = translation[1];
+		this.model.position.z = -translation[2];
 	};
 
+	this.setup();
 }
