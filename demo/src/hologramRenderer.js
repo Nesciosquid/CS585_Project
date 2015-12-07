@@ -38,7 +38,7 @@ var HologramRenderer = function(hologram, container, video, width, height) {
 
 	this.setupScenes = function() {
 		this.videoScene = new THREE.Scene();
-		this.videoCamera = new THREE.OrthographicCamera(-this.width/2, this.width/2, this.height, -this.height/2);
+		this.videoCamera = new THREE.OrthographicCamera(-0.5, 0.5, 0.5, -0.5);
 		this.videoScene.add(this.videoCamera);
 
 		this.modelScene = new THREE.Scene();
@@ -189,26 +189,6 @@ var HologramRenderer = function(hologram, container, video, width, height) {
 	this.createDebugObjects = function(poses) {
 		this.clearDebugObjects();
 		//TODO: Fix this
-	}
-	
-	this.updateSize = function(ratio,  containerWidth, containerHeight){
-		this.width = containerWidth;
-		this.height = containerHeight;
-
-		this.modelCamera.aspect = containerWidth/containerHeight;
-		this.modelCamera.updateProjectionMatrix();
-
-		this.videoCamera.left = -this.width/2;
-		this.videoCamera.right = this.width/2;
-		this.videoCamera.top = this.height/2;
-		this.videoCamera.bottom = -this.height/2;
-		this.videoCamera.updateProjectionMatrix();
-
-		this.videoScene.setSize(this.width, this.height);
-		this.modelScene.setSize(this.width, this.height);
-		this.bgComposer.setSize(this.width, this.height);
-
-		this.renderer.setSize(this.width, this.height);
 	}
 
 	this.setMissingState = function(hasTarget){
