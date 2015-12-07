@@ -119,21 +119,6 @@ function snapshot() {
 
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   imageData = context.getImageData(0, 0, canvas.width, canvas.height);
-  /*
-   Webcam.snap( function(data_uri){
-    //console.log(data_uri);
-    
-    pixelUtil.fetchImageData(data_uri).then(function(data){
-      imageData = data;
-    });
-*/
-  /*
-      pixelUtil.fetchImageData("../sample_photos/IMG_4115.JPG").then(function(data){
-        imageData = data;
-      });
-      */
-
-  //});
 };
 
 function setMissingState(missing) {
