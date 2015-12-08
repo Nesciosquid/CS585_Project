@@ -1,38 +1,6 @@
-var video, canvas, context, imageData, detector, posit, container;
-
-var currentScale = 1.0;
-var currentOpacity = .7;
-var currentHeight = 50;
-var currentRotation = [0, 0, 0];
-
-var currentColor = 0x81D4FA;
-var missingColor = 0xB39DDB;
-
-var rotationTime = 30; // seconds
-var heightDifference = .2; // of model height
-var opacityMissing = .4;
-var opacityLocked = .05;
-var opacityDifference = opacityLocked;
-var opacityMissingCycle = .015;
-var opacityLockedCycle = .005;
-var opacityCycle = opacityLockedCycle; // lower == slower
-var oscillateOpacity = true;
-
-var filmPass;
-var filmPassStaticIntensity = .4;
-var filmPassLineIntensity = .5;
-var badTVPass;
-var badTVPassSpeed = .025;
-var badTVPassSpeedMax = .05;
-var badTVPassMinDistortion = 1.5;
-var badTVPassMaxDistortion = 10;
-var shaderTime = 0;
+var video, canvas, context, imageData, container;
 
 var tracker;
-var reset = false;
-
-var hasTarget = false;
-var showModel = false;
 
 var hologram;
 var holoRenderer;
@@ -91,7 +59,6 @@ function setupTracker(width, height) {
 
 function init() {
 
-  detector = new AR.Detector();
   poseFilter = new PoseFilter();
   setupTracker(canvas.width, canvas.height);
   requestAnimationFrame(tick);
