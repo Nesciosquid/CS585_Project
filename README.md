@@ -63,7 +63,9 @@ We succeeded in implementing pose estimation and creating a tool which will rend
 
 We would like to improve the performance of this application when the viewing area is resized, and to have it respond more intelligently to unexpected webcam resolutions. (It currently positions the model correctly, but the aspect ratio of the displayed video stream can be screwed up.)
 
-We did not improve on the state-of-the-art for 3D pose estimation, but that wasn't our goal! We intended, instead, to implement this technique in an accessible, functional, and aesthetically pleasing way. Along the way, we discovered and reported several issues with the tools we used, which will make future efforts to create applications like this easier. We have also shown that Javascript and HTML5 are valuable tools for creating computer vision applications, especially when the goal is to make them more accessible to many users on a variety of computing platforms.
+We did not improve on the state-of-the-art for 3D pose estimation, but that wasn't our goal! We intended, instead, to implement this technique in an accessible, functional, and aesthetically pleasing way. Along the way, we discovered and reported several issues with the tools we used, which will make future efforts to create applications like this easier.
+
+We have also shown that Javascript and HTML5 are valuable tools for creating computer vision applications, especially when the goal is to make them more accessible to many users on a variety of computing platforms.
 
 ## Tools Used
 
