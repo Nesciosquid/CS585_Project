@@ -10,6 +10,9 @@
 * Allow users to specify any 3D model (.stl file) to be rendered.
 * Look cool!
 
+![We wanted to turn images like this...](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/sample_photos/IMG_4115.JPG)
+![... into images like this!](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/sample_photos/composite_4115.JPG)
+
 ## Live Demonstration
 
 Since our solution is implemented in Javascript and HTML5, it can be run easily from most modern web browsers. We recommend Chrome on Windows and either Chrome or Safari on OSX.
