@@ -1,5 +1,9 @@
 # Project: Browser-based 3D Pose Estimation
 
+For CS585 at Boston University, Fall 2015.
+
+Teammates: Aaron Heuckroth and Elena Quijano
+
 [Background information for our project is available here.](http://www.heuckroth.com/CS585_Project/proposal/)
 
 ## Goals
@@ -52,6 +56,14 @@ The sliders on the left side of the screen provide options for tweaking the way 
    [We discovered and reported](https://github.com/jcmellado/js-aruco/issues/12) a dangerous, crash-inducing memory leak in Chrome which causes massive increases (100 MB/sec) in memory usage when processing large HD (1280x720) webcam images. We tried multiple approaches to solving this problem (such as using explicit JPEG decoding libraries to speed up processing time and avoid slow 2D graphics), but ultimately found success in downsampling the webcam video to a much smaller resolution before passing it into our AR marker detection. This also had the side-effect of doubling our framerates.
    
    [We also diagnosed and reported issues associated with using masking filters with Three.js](https://github.com/mrdoob/three.js/issues/3870#issuecomment-161846817), and ultimately suggested solutions for improving documentation on how to set up the renderers properly.
+   
+## Discussion
+
+We succeeded in implementing pose estimation and creating a tool which will render arbitrary 3D objects as 'holograms' using augmented reality markers. This solution is fairly robust, runs in a web browser, and performs well even on computers without powerful graphics processors. It also works on Android devices which allow for camera access.
+
+We would like to improve the performance of this application when the viewing area is resized, and to have it respond more intelligently to unexpected webcam resolutions. (It currently positions the model correctly, but the aspect ratio of the displayed video stream can be screwed up.)
+
+We did not improve on the state-of-the-art for 3D pose estimation, but that wasn't our goal! We intended, instead, to implement this technique in an accessible, functional, and aesthetically pleasing way. Along the way, we discovered and reported several issues with the tools we used, which will make future efforts to create applications like this easier. We have also shown that Javascript and HTML5 are valuable tools for creating computer vision applications, especially when the goal is to make them more accessible to many users on a variety of computing platforms.
 
 ## Tools Used
 
