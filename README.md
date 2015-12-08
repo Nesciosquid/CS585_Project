@@ -26,7 +26,7 @@ You can view any standard STL file. We recommend checking out [Thingiverse](http
 
 The sliders on the left side of the screen provide options for tweaking the way the 'hologram' is displayed. If you can't see these, you're probably viewing the demo from a small window. In that case, there's a small button (three horizontal black lines) which will open up the controls when clicked.
 
-## Video
+## Results
 
 [Here is a demonstration video showing our solution in action.](https://www.youtube.com/watch?v=CxM675WPhRY&feature=youtu.be)
 
