@@ -2,7 +2,7 @@
 
 [Background information for our project is available here.](http://www.heuckroth.com/CS585_Project/proposal/)
 
-## Goal
+## Goals
 
 * Implement 3D pose estimation using standardized augmented reality markers in a web browser. 
 * Allow for visualization of 'holographic' models in physical space, projected into a live video stream.
