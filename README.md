@@ -2,7 +2,7 @@
 
 [Background information for our project is available here.](http://www.heuckroth.com/CS585_Project/proposal/)
 
-## Demonstration
+## Live Demonstration
 
 Since our solution is implemented in Javascript and HTML5, it can be run easily from most modern web browsers. We recommend Chrome on Windows and either Chrome or Safari on OSX.
 
@@ -13,6 +13,10 @@ You will need access to an augmented reality marker to display in front of the w
 [Here is a pattern we created](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/demo/markers/MultiMarkerDuo.png) which uses multiple markers to improve tracking quality, which can be either printed or displayed on an electronic screen. Be aware that glare from shiny cell phone screens can impede tracking performance. This pattern has been optimized to provide true-to-life-size rendering when actual printed or displayed width of the largest square is 44mm across.
 
 You can view any standard STL file. We recommend checking out [Thingiverse](https://www.thingiverse.com/) to find interesting, 3D-printable models to display. Simply download one that looks interesting, then drag and drop it into the viewing window to load it up.
+
+## Video
+
+[Here is a demonstration video showing our solution in action.](https://www.youtube.com/watch?v=CxM675WPhRY&feature=youtu.be)
 
 ## Tools Used
 
