@@ -4,7 +4,7 @@
 
 ## Demonstration
 
-Since our solution is implemented in Javascript and HTML5, it can be run easily from most modern web browsers. We recommend Chrome, but 
+Since our solution is implemented in Javascript and HTML5, it can be run easily from most modern web browsers. We recommend Chrome on Windows and either Chrome or Safari on OSX.
 
 [You can access the demo here.](https://nesciosquidsecure.github.io/CS585_Project/demo/)
 
