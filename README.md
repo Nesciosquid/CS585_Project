@@ -8,12 +8,9 @@
 * Allow for visualization of 'holographic' models in physical space, projected into a live video stream.
 * Respond intuitively to changes in marker or camera location and orientation and loss of tracking.
 * Allow users to specify any 3D model (.stl file) to be rendered.
-* Take images that look like this...
+* Take images that look like this... ![We wanted to turn images like this...](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/sample_photos/IMG_4115.JPG)
 
-![We wanted to turn images like this...](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/sample_photos/IMG_4115.JPG)
-
-* ... and turn them into images that look like this!
-![... into images like this!](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/sample_photos/composite_4115.JPG)
+* ... and turn them into images that look like this! ![... into images like this!](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/sample_photos/composite_4115.JPG)
 
 ## Live Demonstration
 
