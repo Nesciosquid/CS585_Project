@@ -31,7 +31,7 @@ You can view any standard STL file. We recommend checking out [Thingiverse](http
 * Webcam feed is obtained from the browser, and individual frames are passed along to the renderer and marker detector for processing.
 * Markers are detected using [js-aruco](https://github.com/jcmellado/js-aruco), which first finds black squares in the image by searching for corners, then uses [POSIT](http://www.aforgenet.com/articles/posit/) to compute the 3D position and orientation of those markers relative to the camera. This is done on a downsampled, low-resolution version of the incoming webcam footage, to reduce processing time and memory usage.
 * If multiple markers are detected, we average their positions and rotations to improve our pose estimate.
-* The velocity for each of the 6 parameters (x,y,z location and rotation) is computed relative to the last frame.
+* The velocity for each of the 6 parameters (x,y,z location and rotation) is computed relative to the previous frame.
 * The 12 values (x,y,z location, rotation, and computed velocities) are passed through a Kalman Filter to remove jitter.
 * The filter returns an estimate of the current position and rotation of the average marker position.
 * The holographic model's position and rotation are updated based on the estimated position.
