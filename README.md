@@ -16,7 +16,7 @@ Teammates: Aaron Heuckroth and Elena Quijano
 
 * ... and turn them into images that look like this! ![... into images like this!](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/sample_photos/composite_4115.JPG)
 
-## Live Demonstration
+## Try it out
 
 Since our solution is implemented in Javascript and HTML5, it can be run easily from most modern web browsers. We recommend Chrome on Windows and either Chrome or Safari on OSX.
 
