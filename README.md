@@ -2,6 +2,14 @@
 
 [Background information for our project is available here.](http://www.heuckroth.com/CS585_Project/proposal/)
 
+## Goal
+
+* Implement 3D pose estimation using standardized augmented reality markers in a web browser. 
+* Allow for visualization of 'holographic' models in physical space, projected into a live video stream.
+* Respond intuitively to changes in marker or camera location and orientation and loss of tracking.
+* Allow users to specify any 3D model (.stl file) to be rendered.
+* Look cool!
+
 ## Live Demonstration
 
 Since our solution is implemented in Javascript and HTML5, it can be run easily from most modern web browsers. We recommend Chrome on Windows and either Chrome or Safari on OSX.
