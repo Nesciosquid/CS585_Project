@@ -10,7 +10,7 @@ Since our solution is implemented in Javascript and HTML5, it can be run easily 
 
 You will need access to an augmented reality marker to display in front of the webcam to localize the "hologram." 
 
-[Here is a pattern we created](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/demo/markers/MultiMarkerDuo.png) which uses multiple markers to improve tracking quality, which can be either printed or displayed on an electronic screen. Be aware that glare from shiny cell phone screens can impede tracking performance.
+[Here is a pattern we created](https://raw.githubusercontent.com/Nesciosquid/CS585_Project/master/demo/markers/MultiMarkerDuo.png) which uses multiple markers to improve tracking quality, which can be either printed or displayed on an electronic screen. Be aware that glare from shiny cell phone screens can impede tracking performance. This pattern has been optimized to provide true-to-life-size rendering when actual printed or displayed width of the largest square is 44mm across.
 
 You can view any standard STL file. We recommend checking out [Thingiverse](https://www.thingiverse.com/) to find interesting, 3D-printable models to display. Simply download one that looks interesting, then drag and drop it into the viewing window to load it up.
 
